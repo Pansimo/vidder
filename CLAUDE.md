@@ -19,12 +19,11 @@ Vidder is a travel discovery PWA — a personal place diary for spontaneous disc
 
 ## Development Commands
 
-The project has not been initialized yet. Expected commands once scaffolded:
-
 ```bash
-npm run dev        # local dev server
+npm run dev        # local dev server (http://localhost:3000)
 npm run build      # production build
-npm run lint       # lint
+npm run start      # start production server
+npm run lint       # ESLint
 ```
 
 ## Architecture
