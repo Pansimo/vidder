@@ -73,6 +73,12 @@ export default function MapView({ pois, flyTarget, onFlyComplete }: Props) {
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
+    const geolocate = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+    });
+    map.addControl(geolocate, "top-right");
+
     map.on("moveend", () => {
       const c = map.getCenter();
       storePosition(c.lng, c.lat, map.getZoom());
@@ -124,49 +130,9 @@ export default function MapView({ pois, flyTarget, onFlyComplete }: Props) {
     });
   }, [pois]);
 
-  function flyToUserLocation() {
-    navigator.geolocation?.getCurrentPosition(
-      ({ coords }) => {
-        mapRef.current?.flyTo({
-          center: [coords.longitude, coords.latitude],
-          zoom: 15,
-          duration: 800,
-        });
-      },
-      null,
-      { timeout: 8000 }
-    );
-  }
-
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
-      <button
-        onClick={flyToUserLocation}
-        className="absolute bottom-4 right-4 z-10 rounded-full bg-white p-3 shadow-md active:bg-zinc-100"
-        aria-label="Min position"
-      >
-        <LocateIcon />
-      </button>
     </div>
-  );
-}
-
-function LocateIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-      <circle cx="12" cy="12" r="8" />
-    </svg>
   );
 }

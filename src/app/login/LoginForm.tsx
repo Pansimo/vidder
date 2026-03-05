@@ -25,22 +25,32 @@ export default function LoginForm() {
         password,
       });
       if (error) {
-        setError("Fel e-post eller lösenord.");
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          setError("E-postadressen är inte bekräftad. Kolla din inkorg och klicka på länken i mailet.");
+        } else if (error.message.toLowerCase().includes("invalid login")) {
+          setError("Fel e-post eller lösenord.");
+        } else {
+          setError(error.message);
+        }
       } else {
         router.push("/app");
         router.refresh();
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(
           error.message.includes("already")
             ? "Det finns redan ett konto med den e-postadressen."
-            : "Något gick fel. Försök igen."
+            : error.message
         );
-      } else {
+      } else if (data.session) {
+        // Email confirmation disabled — logged in directly
         router.push("/app");
         router.refresh();
+      } else {
+        // Email confirmation required
+        setError("Konto skapat! Kolla din inkorg och bekräfta e-postadressen innan du loggar in.");
       }
     }
 

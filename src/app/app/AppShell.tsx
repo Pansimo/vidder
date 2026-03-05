@@ -10,8 +10,9 @@ import { syncPoi, syncPending, fetchAndMerge } from "@/lib/sync-pois";
 import type { LocalPoi } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
+const PlacesManager = dynamic(() => import("./PlacesManager"), { ssr: false });
 
-type Tab = "map" | "places";
+type Tab = "map" | "places" | "manage";
 
 interface FlyTarget {
   lat: number;
@@ -118,8 +119,14 @@ export default function AppShell({ userId }: Props) {
         await updatePoiSync(poi.local_id, synced.server_id);
         setPois(await getAllPois());
       }
-    } catch {
-      showToast("Kunde inte hämta position");
+    } catch (err) {
+      const isPermissionDenied =
+        err instanceof GeolocationPositionError && err.code === 1;
+      showToast(
+        isPermissionDenied
+          ? "Tillåt platsåtkomst i webbläsarens inställningar"
+          : "Kunde inte hämta position"
+      );
     } finally {
       setSaving(false);
     }
@@ -143,6 +150,7 @@ export default function AppShell({ userId }: Props) {
             onPoiUpdated={handlePoiUpdated}
           />
         )}
+        {tab === "manage" && <PlacesManager userId={userId} />}
       </main>
 
       {toast && (
