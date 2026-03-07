@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import BottomNav, { type Tab } from "./BottomNav";
-import LogoutButton from "./LogoutButton";
 import { getUserPlaces } from "@/lib/user-places";
 import type { UserPlace } from "@/lib/types";
 
@@ -51,12 +50,6 @@ export default function AppShell({ userId }: Props) {
           <TripsView />
         )}
       </main>
-
-      <div className="pointer-events-none absolute top-3 right-3 z-20">
-        <div className="pointer-events-auto">
-          <LogoutButton />
-        </div>
-      </div>
 
       <BottomNav active={tab} onChange={setTab} />
     </div>

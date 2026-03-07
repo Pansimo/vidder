@@ -1,5 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
 export type Tab = "map" | "places" | "trips";
 
 interface Props {
@@ -8,6 +11,15 @@ interface Props {
 }
 
 export default function BottomNav({ active, onChange }: Props) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
     <nav
       className="flex items-center border-t border-zinc-200 bg-white"
@@ -16,6 +28,7 @@ export default function BottomNav({ active, onChange }: Props) {
       <NavButton label="Karta" active={active === "map"} onClick={() => onChange("map")} icon={<MapIcon />} />
       <NavButton label="Platser" active={active === "places"} onClick={() => onChange("places")} icon={<ListIcon />} />
       <NavButton label="Resor" active={active === "trips"} onClick={() => onChange("trips")} icon={<RouteIcon />} />
+      <NavButton label="Logga ut" active={false} onClick={handleLogout} icon={<LogoutIcon />} />
     </nav>
   );
 }
@@ -73,6 +86,16 @@ function RouteIcon() {
       <circle cx="6" cy="19" r="3" />
       <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7H5.5a3.5 3.5 0 0 1 0-7H14" />
       <circle cx="18" cy="5" r="3" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   );
 }
