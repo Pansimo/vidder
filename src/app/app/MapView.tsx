@@ -2,11 +2,23 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import type { LocalPoi } from "@/lib/types";
+import type { UserPlace, PoiCategory } from "@/lib/types";
 
 const POSITION_KEY = "vidder_map_position";
-const DEFAULT_CENTER: [number, number] = [18.0686, 59.3293]; // Stockholm
-const DEFAULT_ZOOM = 12;
+const DEFAULT_CENTER: [number, number] = [18.0686, 59.3293];
+const DEFAULT_ZOOM = 5;
+
+const CATEGORY_COLOR: Record<PoiCategory, string> = {
+  unset: "#6b7280",
+  viewpoint: "#8b5cf6",
+  food: "#f59e0b",
+  nature: "#10b981",
+  parking: "#3b82f6",
+  camp: "#f97316",
+  beach: "#06b6d4",
+  photo: "#ec4899",
+  other: "#6b7280",
+};
 
 interface StoredPosition {
   lng: number;
@@ -35,17 +47,19 @@ interface FlyTarget {
 }
 
 interface Props {
-  pois: LocalPoi[];
+  places: UserPlace[];
   flyTarget?: FlyTarget | null;
   onFlyComplete?: () => void;
+  onSelectPlace?: (id: string) => void;
 }
 
-export default function MapView({ pois, flyTarget, onFlyComplete }: Props) {
+export default function MapView({ places, flyTarget, onFlyComplete, onSelectPlace }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const onSelectRef = useRef(onSelectPlace);
+  onSelectRef.current = onSelectPlace;
 
-  // Fly to a specific location when requested
   useEffect(() => {
     if (!flyTarget || !mapRef.current) return;
     mapRef.current.flyTo({
@@ -70,32 +84,19 @@ export default function MapView({ pois, flyTarget, onFlyComplete }: Props) {
     });
 
     mapRef.current = map;
-
     map.addControl(new maplibregl.NavigationControl(), "top-right");
-
-    const geolocate = new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
-    });
-    map.addControl(geolocate, "top-right");
+    map.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+      }),
+      "top-right"
+    );
 
     map.on("moveend", () => {
       const c = map.getCenter();
       storePosition(c.lng, c.lat, map.getZoom());
     });
-
-    if (!saved) {
-      navigator.geolocation?.getCurrentPosition(
-        ({ coords }) => {
-          map.flyTo({
-            center: [coords.longitude, coords.latitude],
-            zoom: 14,
-          });
-        },
-        null,
-        { timeout: 8000, maximumAge: 60_000 }
-      );
-    }
 
     return () => {
       markersRef.current.forEach((m) => m.remove());
@@ -105,30 +106,51 @@ export default function MapView({ pois, flyTarget, onFlyComplete }: Props) {
     };
   }, []);
 
-  // Sync markers whenever pois change
+  // Sync markers when places change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Add missing markers
-    pois.forEach((poi) => {
-      if (!markersRef.current.has(poi.local_id)) {
-        const marker = new maplibregl.Marker({ color: "#18181b" })
-          .setLngLat([poi.lng, poi.lat])
-          .addTo(map);
-        markersRef.current.set(poi.local_id, marker);
-      }
-    });
+    const currentIds = new Set(places.map((p) => p.id));
 
     // Remove stale markers
-    const ids = new Set(pois.map((p) => p.local_id));
     markersRef.current.forEach((marker, id) => {
-      if (!ids.has(id)) {
+      if (!currentIds.has(id)) {
         marker.remove();
         markersRef.current.delete(id);
       }
     });
-  }, [pois]);
+
+    // Add missing markers
+    places.forEach((place) => {
+      if (markersRef.current.has(place.id)) return;
+      if (!place.lat || !place.lng) return;
+
+      const color = CATEGORY_COLOR[place.category] ?? CATEGORY_COLOR.unset;
+      const el = document.createElement("div");
+      el.style.width = "14px";
+      el.style.height = "14px";
+      el.style.borderRadius = "50%";
+      el.style.backgroundColor = color;
+      el.style.border = "2px solid white";
+      el.style.boxShadow = "0 1px 4px rgba(0,0,0,0.4)";
+      el.style.cursor = "pointer";
+
+      const popup = new maplibregl.Popup({ offset: 12, closeButton: false })
+        .setText(place.title || "Namnlös plats");
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([place.lng, place.lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      el.addEventListener("click", () => {
+        onSelectRef.current?.(place.id);
+      });
+
+      markersRef.current.set(place.id, marker);
+    });
+  }, [places]);
 
   return (
     <div className="relative h-full w-full">

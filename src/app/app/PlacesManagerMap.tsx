@@ -2,7 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import type { UserPlace } from "@/lib/types";
+import type { UserPlace, PoiCategory } from "@/lib/types";
+
+const CATEGORY_COLOR: Record<PoiCategory, string> = {
+  unset: "#6b7280",
+  viewpoint: "#8b5cf6",
+  food: "#f59e0b",
+  nature: "#10b981",
+  parking: "#3b82f6",
+  camp: "#f97316",
+  beach: "#06b6d4",
+  photo: "#ec4899",
+  other: "#6b7280",
+};
 
 const POSITION_KEY = "vidder_manager_map_position";
 const DEFAULT_CENTER: [number, number] = [18.0686, 59.3293];
@@ -103,12 +115,13 @@ export default function PlacesManagerMap({
 
     places.forEach((place) => {
       const isSelected = place.id === selectedId;
+      const baseColor = CATEGORY_COLOR[place.category] ?? CATEGORY_COLOR.unset;
       const el = document.createElement("div");
-      el.style.width = "14px";
-      el.style.height = "14px";
+      el.style.width = isSelected ? "18px" : "14px";
+      el.style.height = isSelected ? "18px" : "14px";
       el.style.borderRadius = "50%";
-      el.style.backgroundColor = isSelected ? "#dc2626" : "#2563eb";
-      el.style.border = "2px solid white";
+      el.style.backgroundColor = isSelected ? "#dc2626" : baseColor;
+      el.style.border = isSelected ? "3px solid white" : "2px solid white";
       el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.4)";
       el.style.cursor = "pointer";
 

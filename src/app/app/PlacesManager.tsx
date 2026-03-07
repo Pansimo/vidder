@@ -119,9 +119,8 @@ function PlacesManagerEditor({
     try {
       await updateUserPlace(
         place.id,
-        { note: note || null, visibility, visitStatus },
+        { note: note || null, visibility, visitStatus, title, category },
         place.placeId,
-        { name: title, category },
         userId
       );
       onSaved({
@@ -211,7 +210,7 @@ function PlacesManagerEditor({
         <div>
           <label className="mb-2 block text-xs font-medium text-zinc-500">Synlighet</label>
           <div className="flex gap-2">
-            {(["shared", "public"] as PoiVisibility[]).map((v) => (
+            {(["private", "shared", "public"] as PoiVisibility[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setVisibility(v)}
@@ -221,7 +220,7 @@ function PlacesManagerEditor({
                     : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 }`}
               >
-                {v === "shared" ? "Delad" : "Publik"}
+                {v === "private" ? "Privat" : v === "shared" ? "Delad" : "Publik"}
               </button>
             ))}
           </div>
