@@ -57,12 +57,12 @@ export default function LoginForm() {
     setLoading(false);
   }
 
-  async function handleGoogle() {
+  async function handleOAuth(provider: "google" | "apple") {
     setError(null);
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -78,10 +78,23 @@ export default function LoginForm() {
           Vidder
         </h1>
 
+        {/* Apple */}
+        <button
+          type="button"
+          onClick={() => handleOAuth("apple")}
+          disabled={loading}
+          className="mb-3 flex w-full items-center justify-center gap-3 rounded-lg bg-black py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
+        >
+          <svg width="16" height="18" viewBox="0 0 16 18" fill="white">
+            <path d="M13.32 9.6c-.02-2.1 1.72-3.12 1.8-3.18-1-.44-2.52-.72-3.18.18-.84 1.02-.66 2.52-.66 2.52s-1.14-.06-2.1.78c-.96.84-1.38 2.22-1.38 2.22s-.48 1.62.12 3.24c.6 1.62 1.68 2.64 1.68 2.64s1.14-.3 2.16-1.14c1.02-.84 1.38-2.04 1.38-2.04s.3-1.08.18-2.1c-.12-1.02-.54-1.74-.54-1.74s.54-.6.54-1.38ZM10.86 4.2c.72-.9.84-2.1.84-2.1s-1.2.12-2.1.96c-.9.84-1.08 2.04-1.08 2.04s1.2-.06 2.34-.9Z"/>
+          </svg>
+          Fortsätt med Apple
+        </button>
+
         {/* Google */}
         <button
           type="button"
-          onClick={handleGoogle}
+          onClick={() => handleOAuth("google")}
           disabled={loading}
           className="mb-4 flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-200 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
         >
