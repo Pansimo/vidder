@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+const APPLE_CLIENT_ID = "se.galento.vidder.web";
 
 export default function LoginForm() {
   const [tab, setTab] = useState<"login" | "register">("login");
@@ -11,6 +13,32 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Handle Apple callback: the API route redirects here with apple_id_token.
+  useEffect(() => {
+    const idToken = searchParams.get("apple_id_token");
+    if (!idToken) return;
+
+    // Clean the URL
+    window.history.replaceState({}, "", "/login");
+
+    (async () => {
+      setLoading(true);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: idToken,
+      });
+      if (error) {
+        setError("Apple-inloggning misslyckades: " + error.message);
+        setLoading(false);
+      } else {
+        router.push("/app");
+        router.refresh();
+      }
+    })();
+  }, [searchParams, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,11 +73,9 @@ export default function LoginForm() {
             : error.message
         );
       } else if (data.session) {
-        // Email confirmation disabled — logged in directly
         router.push("/app");
         router.refresh();
       } else {
-        // Email confirmation required
         setError("Konto skapat! Kolla din inkorg och bekräfta e-postadressen innan du loggar in.");
       }
     }
@@ -57,12 +83,27 @@ export default function LoginForm() {
     setLoading(false);
   }
 
-  async function handleOAuth(provider: "google" | "apple") {
+  function handleApple() {
+    setError(null);
+    setLoading(true);
+    // Redirect to Apple's authorization page. Apple will POST the result
+    // to our /api/auth/apple-callback endpoint.
+    const params = new URLSearchParams({
+      client_id: APPLE_CLIENT_ID,
+      redirect_uri: `${window.location.origin}/api/auth/apple-callback`,
+      response_type: "code id_token",
+      response_mode: "form_post",
+      scope: "name email",
+    });
+    window.location.href = `https://appleid.apple.com/auth/authorize?${params.toString()}`;
+  }
+
+  async function handleGoogle() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -81,7 +122,7 @@ export default function LoginForm() {
         {/* Apple */}
         <button
           type="button"
-          onClick={() => handleOAuth("apple")}
+          onClick={handleApple}
           disabled={loading}
           className="mb-3 flex w-full items-center justify-center gap-3 rounded-lg bg-black py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
         >
@@ -94,7 +135,7 @@ export default function LoginForm() {
         {/* Google */}
         <button
           type="button"
-          onClick={() => handleOAuth("google")}
+          onClick={handleGoogle}
           disabled={loading}
           className="mb-4 flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-200 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
         >
