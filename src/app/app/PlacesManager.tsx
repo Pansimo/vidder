@@ -313,6 +313,7 @@ export default function PlacesManager({ userId }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<PoiCategory | "">("");
+  const [visibilityFilter, setVisibilityFilter] = useState<PoiVisibility | "">("");
   const [visitFilter, setVisitFilter] = useState<PoiVisitStatus | "">("");
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -329,10 +330,11 @@ export default function PlacesManager({ userId }: Props) {
       if (q && !p.title.toLowerCase().includes(q) && !(p.note ?? "").toLowerCase().includes(q))
         return false;
       if (categoryFilter && p.category !== categoryFilter) return false;
+      if (visibilityFilter && p.visibility !== visibilityFilter) return false;
       if (visitFilter && p.visitStatus !== visitFilter) return false;
       return true;
     });
-  }, [places, query, categoryFilter, visitFilter]);
+  }, [places, query, categoryFilter, visibilityFilter, visitFilter]);
 
   const selected = places.find((p) => p.id === selectedId) ?? null;
 
@@ -393,13 +395,14 @@ export default function PlacesManager({ userId }: Props) {
               ))}
             </select>
             <select
-              value={visitFilter}
-              onChange={(e) => setVisitFilter(e.target.value as PoiVisitStatus | "")}
+              value={visibilityFilter}
+              onChange={(e) => setVisibilityFilter(e.target.value as PoiVisibility | "")}
               className="flex-1 rounded-lg border border-zinc-200 px-2 py-1.5 text-xs outline-none"
             >
-              <option value="">Alla status</option>
-              <option value="visited">Besökt</option>
-              <option value="planned">Planerad</option>
+              <option value="">Alla synligheter</option>
+              <option value="private">Privat</option>
+              <option value="shared">Delad</option>
+              <option value="public">Publik</option>
             </select>
           </div>
         </div>

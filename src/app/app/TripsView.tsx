@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import { getUserTrips, getTripPoints } from "@/lib/trips";
+import { getUserTripStories } from "@/lib/stories";
 import type { Trip } from "@/lib/types";
+
+interface TripStory {
+  tripId: string;
+  shareToken: string;
+  title: string;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE", {
@@ -101,12 +108,16 @@ function TripMap({ tripId, onClose }: { tripId: string; onClose: () => void }) {
 
 export default function TripsView() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [stories, setStories] = useState<TripStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
   useEffect(() => {
-    getUserTrips()
-      .then(setTrips)
+    Promise.all([getUserTrips(), getUserTripStories()])
+      .then(([t, s]) => {
+        setTrips(t);
+        setStories(s);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -132,45 +143,60 @@ export default function TripsView() {
           </div>
         ) : (
           <ul className="divide-y divide-zinc-50">
-            {trips.map((trip) => (
-              <li key={trip.id}>
-                <button
-                  onClick={() => setSelectedTripId(trip.id)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-zinc-50"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100">
-                    <RouteIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-zinc-900">
-                      {trip.name || "Namnlös resa"}
-                    </p>
-                    <p className="text-xs text-zinc-400">
-                      {formatDate(trip.startedAt)}
-                      {trip.distanceMeters > 0 && ` · ${formatDist(trip.distanceMeters)}`}
-                    </p>
-                  </div>
-                  {trip.isLive && (
-                    <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                      Live
-                    </span>
-                  )}
-                  {trip.shareToken && (
-                    <a
-                      href={`/resa/${trip.shareToken}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 hover:bg-zinc-200"
-                    >
-                      Dela
-                    </a>
-                  )}
-                  <ChevronRightIcon />
-                </button>
-              </li>
-            ))}
+            {trips.map((trip) => {
+              const story = stories.find((s) => s.tripId === trip.id);
+              return (
+                <li key={trip.id}>
+                  <button
+                    onClick={() => setSelectedTripId(trip.id)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-zinc-50"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100">
+                      <RouteIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-900">
+                        {trip.name || "Namnlös resa"}
+                      </p>
+                      <p className="text-xs text-zinc-400">
+                        {formatDate(trip.startedAt)}
+                        {trip.distanceMeters > 0 && ` · ${formatDist(trip.distanceMeters)}`}
+                      </p>
+                    </div>
+                    {trip.isLive && (
+                      <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                        Live
+                      </span>
+                    )}
+                    {story && (
+                      <a
+                        href={`/story/${story.shareToken}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                        style={{ backgroundColor: '#0009AB' }}
+                      >
+                        📖 Story
+                      </a>
+                    )}
+                    {!story && trip.shareToken && (
+                      <a
+                        href={`/resa/${trip.shareToken}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 hover:bg-zinc-200"
+                      >
+                        Dela
+                      </a>
+                    )}
+                    <ChevronRightIcon />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

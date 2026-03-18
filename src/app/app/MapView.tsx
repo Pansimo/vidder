@@ -2,22 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import type { UserPlace, PoiCategory } from "@/lib/types";
+import type { UserPlace, PoiVisibility } from "@/lib/types";
 
 const POSITION_KEY = "vidder_map_position";
 const DEFAULT_CENTER: [number, number] = [18.0686, 59.3293];
 const DEFAULT_ZOOM = 5;
 
-const CATEGORY_COLOR: Record<PoiCategory, string> = {
-  unset: "#6b7280",
-  viewpoint: "#8b5cf6",
-  food: "#f59e0b",
-  nature: "#10b981",
-  parking: "#3b82f6",
-  camp: "#f97316",
-  beach: "#06b6d4",
-  photo: "#ec4899",
-  other: "#6b7280",
+const VISIBILITY_COLOR: Record<PoiVisibility, string> = {
+  private: "#16A34A",
+  shared: "#0009AB",
+  public: "#F97316",
 };
 
 interface StoredPosition {
@@ -126,7 +120,7 @@ export default function MapView({ places, flyTarget, onFlyComplete, onSelectPlac
       if (markersRef.current.has(place.id)) return;
       if (!place.lat || !place.lng) return;
 
-      const color = CATEGORY_COLOR[place.category] ?? CATEGORY_COLOR.unset;
+      const color = VISIBILITY_COLOR[place.visibility] ?? VISIBILITY_COLOR.private;
       const el = document.createElement("div");
       el.style.width = "14px";
       el.style.height = "14px";

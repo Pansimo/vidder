@@ -54,3 +54,106 @@ export interface TripPoint {
   lng: number;
   recordedAt: string;
 }
+
+// Story types
+
+export type StoryStatus = 'draft' | 'shared';
+export type StoryCardType = 'intro' | 'place' | 'transition' | 'outro' | 'day';
+
+export interface Story {
+  id: string;
+  tripId: string;
+  userId: string;
+  title: string;
+  generatedAt: string;
+  cardCount: number;
+  status: StoryStatus;
+  coverImageUrl: string | null;
+  shareToken: string | null;
+  sharedAt: string | null;
+}
+
+export interface StoryCard {
+  id: string;
+  storyId: string;
+  cardType: StoryCardType;
+  position: number;
+  voiId: string | null;
+  data: StoryCardData;
+  createdAt: string;
+}
+
+export type StoryCardData =
+  | IntroCardData
+  | PlaceCardData
+  | TransitionCardData
+  | OutroCardData
+  | DayCardData;
+
+export interface IntroCardData {
+  [key: string]: unknown;
+  trip_name: string;
+  started_at: string;
+  ended_at: string;
+  distance_meters: number;
+  place_count: number;
+  transport_mode: string;
+  has_route: boolean;
+  route_image_overlay?: string;
+  points_image_overlay?: string;
+  map_style: string;
+  map_size: string;
+  map_padding: number;
+  voi_points?: Array<{ lat: number; lng: number; title: string }>;
+}
+
+export interface PlaceCardData {
+  [key: string]: unknown;
+  title: string;
+  lat: number;
+  lng: number;
+  note?: string;
+  category: string;
+  created_at: string;
+  thumbnail_url?: string;
+  is_favorite?: boolean;
+}
+
+export interface TransitionCardData {
+  [key: string]: unknown;
+  from_title: string;
+  from_lat: number;
+  from_lng: number;
+  to_title: string;
+  to_lat: number;
+  to_lng: number;
+  distance_meters: number;
+  map_image_overlay?: string;
+  map_style: string;
+  map_size: string;
+  map_padding: number;
+}
+
+export interface OutroCardData {
+  [key: string]: unknown;
+  trip_name: string;
+  started_at: string;
+  ended_at: string;
+  distance_meters: number;
+  duration_minutes: number;
+  place_count: number;
+  transport_mode: string;
+  has_route: boolean;
+  route_image_overlay?: string;
+  points_image_overlay?: string;
+  map_style: string;
+  map_size: string;
+  map_padding: number;
+}
+
+export interface DayCardData {
+  [key: string]: unknown;
+  day_number: number;
+  date: string;
+  weekday: number;
+}

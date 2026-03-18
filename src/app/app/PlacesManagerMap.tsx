@@ -2,18 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import type { UserPlace, PoiCategory } from "@/lib/types";
+import type { UserPlace, PoiVisibility } from "@/lib/types";
 
-const CATEGORY_COLOR: Record<PoiCategory, string> = {
-  unset: "#6b7280",
-  viewpoint: "#8b5cf6",
-  food: "#f59e0b",
-  nature: "#10b981",
-  parking: "#3b82f6",
-  camp: "#f97316",
-  beach: "#06b6d4",
-  photo: "#ec4899",
-  other: "#6b7280",
+const VISIBILITY_COLOR: Record<PoiVisibility, string> = {
+  private: "#16A34A",
+  shared: "#0009AB",
+  public: "#F97316",
 };
 
 const POSITION_KEY = "vidder_manager_map_position";
@@ -115,7 +109,7 @@ export default function PlacesManagerMap({
 
     places.forEach((place) => {
       const isSelected = place.id === selectedId;
-      const baseColor = CATEGORY_COLOR[place.category] ?? CATEGORY_COLOR.unset;
+      const baseColor = VISIBILITY_COLOR[place.visibility] ?? VISIBILITY_COLOR.private;
       const el = document.createElement("div");
       el.style.width = isSelected ? "18px" : "14px";
       el.style.height = isSelected ? "18px" : "14px";
