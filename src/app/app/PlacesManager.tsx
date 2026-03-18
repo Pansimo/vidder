@@ -13,7 +13,7 @@ import type { UserPlace, PoiCategory, PoiVisibility, PoiVisitStatus } from "@/li
 const PlacesManagerMap = dynamic(() => import("./PlacesManagerMap"), { ssr: false });
 
 const CATEGORY_LABELS: Record<PoiCategory, string> = {
-  unset: "Okänd",
+  unset: "❓",
   viewpoint: "🏔 Utsikt",
   food: "🍽 Mat",
   nature: "🌿 Natur",

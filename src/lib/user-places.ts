@@ -7,7 +7,7 @@ export async function getUserPlaces(): Promise<UserPlace[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("user_places")
-    .select("*, place:places(id,name,lat,lng,category)")
+    .select("*, place:places!left(id,name,lat,lng,category)")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
