@@ -76,6 +76,122 @@ function PlacesManagerList({
   );
 }
 
+const VISIBILITY_LABELS: Record<PoiVisibility, string> = {
+  private: "Privat",
+  shared: "Delad",
+  public: "Publik",
+};
+
+function formatCoords(lat: number, lng: number): string {
+  const latDir = lat >= 0 ? "N" : "S";
+  const lngDir = lng >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(5)}°${latDir}, ${Math.abs(lng).toFixed(5)}°${lngDir}`;
+}
+
+function PlacesManagerDetail({
+  place,
+  onBack,
+  onEdit,
+  onShowOnMap,
+}: {
+  place: UserPlace;
+  onBack: () => void;
+  onEdit: () => void;
+  onShowOnMap: (place: UserPlace) => void;
+}) {
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    setImageUrls([]);
+    getUserPlaceImageUrls(place.id).then(setImageUrls).catch(() => {});
+  }, [place.id]);
+
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col bg-white">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-4 py-3">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
+        >
+          <ChevronLeftIcon /> Tillbaka
+        </button>
+        <button
+          onClick={onEdit}
+          className="rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white"
+        >
+          Redigera
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Title + favorite */}
+        <div className="flex items-start gap-2">
+          <h2 className="flex-1 text-lg font-semibold text-zinc-900">
+            {place.title || "(namnlös)"}
+          </h2>
+          {place.isFavorite && (
+            <span className="mt-1 text-xl" style={{ color: "#B45309" }}>★</span>
+          )}
+        </div>
+
+        {/* Category + visibility */}
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
+            {CATEGORY_LABELS[place.category]}
+          </span>
+          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
+            {VISIBILITY_LABELS[place.visibility]}
+          </span>
+        </div>
+
+        {/* Note */}
+        {place.note && (
+          <div>
+            <p className="mb-1 text-xs font-medium text-zinc-500">Anteckning</p>
+            <p className="whitespace-pre-wrap text-sm text-zinc-700">{place.note}</p>
+          </div>
+        )}
+
+        {/* Images */}
+        {imageUrls.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-medium text-zinc-500">Bilder</p>
+            <div className="flex flex-wrap gap-2">
+              {imageUrls.map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={url}
+                  src={url}
+                  alt=""
+                  className="h-20 w-20 rounded-lg object-cover"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Coordinates + date */}
+        <div className="text-sm text-zinc-400">
+          <p>{formatCoords(place.lat, place.lng)}</p>
+          <p className="mt-1">{formatDate(place.createdAt)}</p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="shrink-0 border-t border-zinc-200 px-4 py-3">
+        <button
+          onClick={() => onShowOnMap(place)}
+          className="text-sm text-blue-600 hover:text-blue-800"
+        >
+          Visa på karta
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function PlacesManagerEditor({
   place,
   onBack,
@@ -311,6 +427,7 @@ export default function PlacesManager({ userId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<PoiCategory | "">("");
   const [visibilityFilter, setVisibilityFilter] = useState<PoiVisibility | "">("");
@@ -342,6 +459,7 @@ export default function PlacesManager({ userId }: Props) {
     const place = places.find((p) => p.id === id);
     if (place) setFlyTarget({ lat: place.lat, lng: place.lng });
     setSelectedId(id);
+    setEditing(false);
   }, [places]);
 
   function handleSaved(updated: UserPlace) {
@@ -424,12 +542,23 @@ export default function PlacesManager({ userId }: Props) {
           )}
         </div>
 
-        {/* Editor overlay */}
-        {selected && (
-          <PlacesManagerEditor
+        {/* Detail / Editor overlay */}
+        {selected && !editing && (
+          <PlacesManagerDetail
             place={selected}
             onBack={() => setSelectedId(null)}
-            onSaved={handleSaved}
+            onEdit={() => setEditing(true)}
+            onShowOnMap={handleShowOnMap}
+          />
+        )}
+        {selected && editing && (
+          <PlacesManagerEditor
+            place={selected}
+            onBack={() => setEditing(false)}
+            onSaved={(updated) => {
+              handleSaved(updated);
+              setEditing(false);
+            }}
             onDeleted={handleDeleted}
             onShowOnMap={handleShowOnMap}
             userId={userId}
