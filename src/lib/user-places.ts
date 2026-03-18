@@ -14,15 +14,16 @@ export async function getUserPlaces(): Promise<UserPlace[]> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return data.map((row: any) => {
-    const isPrivate = row.visibility === "private";
+    const resolvedCategory = ((row.category && row.category !== "unset" ? row.category : null) || row.place?.category || "unset") as PoiCategory;
+    console.log(`[place] "${row.title || row.place?.name}" — row.category=${row.category}, place.category=${row.place?.category}, resolved=${resolvedCategory}`);
     return {
       id: row.id,
       userId: row.user_id,
       placeId: row.place_id ?? null,
-      title: isPrivate ? (row.title ?? "") : (row.place?.name ?? row.title ?? ""),
-      lat: isPrivate ? (row.lat ?? 0) : (row.place?.lat ?? 0),
-      lng: isPrivate ? (row.lng ?? 0) : (row.place?.lng ?? 0),
-      category: ((isPrivate ? row.category : row.place?.category) ?? "unset") as PoiCategory,
+      title: row.title || row.place?.name || "",
+      lat: row.lat || row.place?.lat || 0,
+      lng: row.lng || row.place?.lng || 0,
+      category: ((row.category && row.category !== "unset" ? row.category : null) || row.place?.category || "unset") as PoiCategory,
       note: row.note ?? null,
       visibility: row.visibility as PoiVisibility,
       visitStatus: (row.visit_status ?? "visited") as PoiVisitStatus,
