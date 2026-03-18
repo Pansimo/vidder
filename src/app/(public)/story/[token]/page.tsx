@@ -43,6 +43,7 @@ function toTrip(row: Record<string, unknown>): Trip {
     distanceMeters: row.distance_meters as number,
     isLive: row.is_live as boolean,
     shareToken: (row.share_token as string) || null,
+    source: (row.source as Trip['source']) || null,
   };
 }
 

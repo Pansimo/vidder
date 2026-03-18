@@ -25,6 +25,15 @@ function formatDist(meters: number) {
   return Math.round(meters) + " m";
 }
 
+function sourceEmoji(source: string | null): string {
+  switch (source) {
+    case "live": return "🚗";
+    case "imported": return "📸";
+    case "manual": return "✏️";
+    default: return "🗺️";
+  }
+}
+
 // ---- Trip map ----
 
 function TripMap({ tripId, onClose }: { tripId: string; onClose: () => void }) {
@@ -151,8 +160,8 @@ export default function TripsView() {
                     onClick={() => setSelectedTripId(trip.id)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-zinc-50"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100">
-                      <RouteIcon />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-lg">
+                      {sourceEmoji(trip.source)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-zinc-900">

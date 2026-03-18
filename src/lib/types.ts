@@ -39,6 +39,8 @@ export interface UserPlace {
   updatedAt: string;
 }
 
+export type TripSource = 'live' | 'imported' | 'manual';
+
 export interface Trip {
   id: string;
   name: string;
@@ -47,6 +49,7 @@ export interface Trip {
   distanceMeters: number;
   isLive: boolean;
   shareToken: string | null;
+  source: TripSource | null;
 }
 
 export interface TripPoint {

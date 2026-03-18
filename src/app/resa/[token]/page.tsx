@@ -17,7 +17,7 @@ export default async function TripSharePage({ params }: Props) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("trips")
-    .select("id, name, started_at, ended_at, distance_meters, is_live, share_token")
+    .select("id, name, started_at, ended_at, distance_meters, is_live, share_token, source")
     .eq("share_token", token)
     .maybeSingle();
 
@@ -31,6 +31,7 @@ export default async function TripSharePage({ params }: Props) {
     distanceMeters: data.distance_meters ?? 0,
     isLive: data.is_live ?? false,
     shareToken: data.share_token ?? null,
+    source: data.source ?? null,
   };
 
   return <TripShareWrapper trip={trip} />;
