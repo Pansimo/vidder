@@ -10,6 +10,7 @@ export async function getUserPlaces(): Promise<UserPlace[]> {
     .select("*, place:places!left(id,name,lat,lng,category)")
     .order("created_at", { ascending: false });
 
+  console.log("[getUserPlaces] error:", error, "rows:", data?.length ?? 0);
   if (error || !data) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
