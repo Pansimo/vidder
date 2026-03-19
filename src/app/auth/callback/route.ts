@@ -13,9 +13,12 @@ export async function GET(request: Request) {
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
-      type: type as "signup" | "email",
+      type: type as "signup" | "email" | "recovery",
     });
     if (!error) {
+      if (type === "recovery") {
+        return NextResponse.redirect(`${origin}/auth/reset-password`);
+      }
       return NextResponse.redirect(`${origin}/auth/confirmed`);
     }
   } else if (code) {
