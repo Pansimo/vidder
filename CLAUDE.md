@@ -128,7 +128,8 @@ Kuratorverktyget (`/admin/kurator/`) hanterar kurser, stämpelkontroll och grans
 - **SavedToast** — grön bekräftelse efter sparning (`?saved=1` URL-param)
 - **updateCourse** — sparar `name`, `description`, `is_public`, `requires_premium`
 - **active_from/active_to** — valfria i formuläret (NOT NULL i DB men skippas om tomma)
-- **Edge Function stamp-control** — versionshanterad i `supabase/functions/`
+- **Edge Function stamp-control** — versionshanterad i `supabase/functions/`, deploy med `supabase functions deploy stamp-control --no-verify-jwt`
+- **Åtkomstnivåer** — public/premium/private per bana via AccessSelector, sparas som `is_public` + `requires_premium`
 
 ## Aktuella problem att lösa
 
