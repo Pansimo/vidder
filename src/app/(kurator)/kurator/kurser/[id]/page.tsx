@@ -41,7 +41,7 @@ export default async function RedigeraKursPage({ params }: Props) {
     const is_public = access === 'public'
     const requires_premium = access === 'premium'
 
-    await sb
+    const { error } = await sb
       .from('orienteering_courses')
       .update({
         name: formData.get('name') as string,
@@ -53,6 +53,8 @@ export default async function RedigeraKursPage({ params }: Props) {
         requires_premium,
       })
       .eq('id', id)
+
+    console.log('[updateCourse] result:', { access, is_public, requires_premium, error: error?.message })
 
     revalidatePath(`/kurator/kurser/${id}`)
     redirect(`/kurator/kurser/${id}`)
