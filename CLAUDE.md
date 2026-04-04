@@ -1,6 +1,6 @@
 # CLAUDE.md — Vidder Web
 
-Uppdaterad: 2026-03-17
+Uppdaterad: 2026-04-04
 
 ## Vad är detta?
 
@@ -117,6 +117,18 @@ Story-korten genereras av Flutter-appen och lagras i `story_cards.data` (JSONB):
 
 Kartbilder byggs via Mapbox Static Images API:
 `https://api.mapbox.com/styles/v1/mapbox/{style}/static/{overlay}/auto/{size}?access_token={token}&padding={padding}`
+
+## Kurator Admin
+
+Kuratorverktyget (`/admin/kurator/`) hanterar kurser, stämpelkontroll och granskning.
+
+### Senaste ändringar
+- **AccessSelector** — client component för public/premium/private radio
+- **Knappstil** — `.btn-primary`, `.btn-secondary`, `.btn-danger` i `globals.css`
+- **SavedToast** — grön bekräftelse efter sparning (`?saved=1` URL-param)
+- **updateCourse** — sparar `name`, `description`, `is_public`, `requires_premium`
+- **active_from/active_to** — valfria i formuläret (NOT NULL i DB men skippas om tomma)
+- **Edge Function stamp-control** — versionshanterad i `supabase/functions/`
 
 ## Aktuella problem att lösa
 
