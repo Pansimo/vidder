@@ -32,29 +32,34 @@ export default async function RedigeraKursPage({ params }: Props) {
 
   async function updateCourse(formData: FormData) {
     'use server'
-    const supabase2 = (await import('@/lib/supabase/server')).createClient()
-    const sb = await supabase2
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) return
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
 
+    console.log('[updateCourse] called, access:', formData.get('access'), 'name:', formData.get('name'))
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      console.log('[updateCourse] no user')
+      return
+    }
+
+    const name = formData.get('name') as string
+    const description = formData.get('description') as string
+    const course_type = formData.get('course_type') as string
+    const active_from = (formData.get('active_from') as string) || null
+    const active_to = (formData.get('active_to') as string) || null
     const access = formData.get('access') as string
     const is_public = access === 'public'
     const requires_premium = access === 'premium'
 
-    const { error } = await sb
+    console.log('[updateCourse] updating:', { name, access, is_public, requires_premium, id })
+
+    const { error } = await supabase
       .from('orienteering_courses')
-      .update({
-        name: formData.get('name') as string,
-        description: formData.get('description') as string,
-        course_type: formData.get('course_type') as string,
-        active_from: (formData.get('active_from') as string) || null,
-        active_to: (formData.get('active_to') as string) || null,
-        is_public,
-        requires_premium,
-      })
+      .update({ name, description, course_type, active_from, active_to, is_public, requires_premium })
       .eq('id', id)
 
-    console.log('[updateCourse] result:', { access, is_public, requires_premium, error: error?.message })
+    console.log('[updateCourse] result error:', error?.message ?? 'none')
 
     revalidatePath(`/kurator/kurser/${id}`)
     redirect(`/kurator/kurser/${id}`)
