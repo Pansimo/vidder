@@ -102,7 +102,7 @@ function ApproveButton({ controlId }: { controlId: string }) {
     <form action={handle}>
       <button
         type="submit"
-        className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
+        className="btn-primary rounded-md px-3 py-1 text-xs font-medium"
       >
         Godkänn
       </button>
@@ -120,8 +120,7 @@ function RejectButton({ controlId }: { controlId: string }) {
     <form action={handle}>
       <button
         type="submit"
-        className="rounded-md px-3 py-1 text-xs font-medium hover:underline"
-        style={{ color: 'var(--color-danger)' }}
+        className="btn-danger rounded-md px-3 py-1 text-xs font-medium"
       >
         Avvisa
       </button>

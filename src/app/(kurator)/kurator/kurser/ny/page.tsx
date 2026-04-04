@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createCourse } from '../actions'
 
 export default function NyKursPage() {
@@ -60,13 +61,20 @@ export default function NyKursPage() {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full rounded-md px-4 py-2 text-sm font-medium text-white"
-          style={{ backgroundColor: 'var(--color-primary)' }}
-        >
-          Skapa bana
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="btn-primary flex-1 rounded-md px-4 py-2 text-sm font-medium"
+          >
+            Skapa bana
+          </button>
+          <Link
+            href="/kurator/kurser"
+            className="btn-secondary flex-1 rounded-md px-4 py-2 text-center text-sm font-medium text-gray-700"
+          >
+            Avbryt
+          </Link>
+        </div>
       </form>
     </div>
   )

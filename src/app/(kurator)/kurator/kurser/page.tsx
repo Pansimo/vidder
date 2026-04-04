@@ -29,8 +29,7 @@ export default async function KurserPage() {
         <h1 className="text-2xl font-bold text-gray-900">Banor</h1>
         <Link
           href="/kurator/kurser/ny"
-          className="rounded-md px-4 py-2 text-sm font-medium text-white"
-          style={{ backgroundColor: 'var(--color-primary)' }}
+          className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
         >
           Ny bana
         </Link>
@@ -141,8 +140,7 @@ function DeleteButton({ courseId }: { courseId: string }) {
     <form action={handleDelete}>
       <button
         type="submit"
-        className="text-sm font-medium hover:underline"
-        style={{ color: 'var(--color-danger)' }}
+        className="btn-danger rounded-md px-2 py-0.5 text-xs font-medium"
       >
         Ta bort
       </button>

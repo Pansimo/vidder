@@ -26,3 +26,49 @@ body {
   color: var(--foreground);
   font-family: var(--font-nunito), Arial, Helvetica, sans-serif;
 }
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-primary:hover {
+  background-color: #0007a0;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  background-color: #00058a;
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 0.5px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  background-color: #f9fafb;
+}
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: #a32d2d;
+  border: 0.5px solid #f7c1c1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-danger:hover {
+  background-color: #fcebeb;
+}
+.btn-danger:active {
+  transform: scale(0.97);
+}

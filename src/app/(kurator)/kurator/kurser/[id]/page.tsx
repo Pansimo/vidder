@@ -98,8 +98,7 @@ export default async function RedigeraKursPage({ params }: Props) {
         <h1 className="text-2xl font-bold text-gray-900">Redigera bana</h1>
         <Link
           href={`/kurator/kurser/${id}/kontroller`}
-          className="rounded-md px-4 py-2 text-sm font-medium text-white"
-          style={{ backgroundColor: 'var(--color-primary)' }}
+          className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
         >
           Kontroller ({controlCount})
         </Link>
@@ -188,8 +187,7 @@ export default async function RedigeraKursPage({ params }: Props) {
 
         <button
           type="submit"
-          className="w-full cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{ backgroundColor: 'var(--color-primary)' }}
+          className="btn-primary w-full rounded-md px-4 py-2 text-sm font-medium"
         >
           Spara ändringar
         </button>
@@ -208,7 +206,7 @@ export default async function RedigeraKursPage({ params }: Props) {
           <form action={unpublishCourse}>
             <button
               type="submit"
-              className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn-secondary w-full rounded-md px-4 py-2 text-sm font-medium text-gray-700"
             >
               Avpublicera
             </button>
@@ -218,8 +216,7 @@ export default async function RedigeraKursPage({ params }: Props) {
             <button
               type="submit"
               disabled={!canPublish}
-              className="w-full cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ backgroundColor: 'var(--color-primary)' }}
+              className="btn-primary w-full rounded-md px-4 py-2 text-sm font-medium"
             >
               Publicera bana
             </button>
