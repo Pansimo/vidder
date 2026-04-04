@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { updateUserFlag } from './actions'
 
 export default async function AnvandarePage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) return null
 
   const { data: callerProfile } = await supabase
     .from('profiles')
@@ -14,7 +13,18 @@ export default async function AnvandarePage() {
     .eq('id', user.id)
     .single()
 
-  if (!callerProfile?.is_admin) redirect('/kurator')
+  if (!callerProfile?.is_admin) {
+    return (
+      <div className="flex min-h-96 flex-col items-center justify-center p-6">
+        <div className="mb-4 text-4xl">🔒</div>
+        <h1 className="mb-2 text-xl font-medium">Ingen behörighet</h1>
+        <p className="text-sm text-gray-500">
+          Den här sidan kräver admin-behörighet.
+          Kontakta Vidder om du behöver åtkomst.
+        </p>
+      </div>
+    )
+  }
 
   const { data: users } = await supabase
     .from('profiles')

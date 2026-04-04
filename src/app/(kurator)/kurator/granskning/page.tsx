@@ -15,9 +15,13 @@ export default async function GranskningPage() {
 
   if (!callerProfile?.is_admin) {
     return (
-      <div className="p-6">
-        <h1 className="mb-4 text-2xl font-bold text-gray-900">Granskning</h1>
-        <p className="text-sm text-gray-400">Du behöver admin-behörighet för att granska kontroller.</p>
+      <div className="flex min-h-96 flex-col items-center justify-center p-6">
+        <div className="mb-4 text-4xl">🔒</div>
+        <h1 className="mb-2 text-xl font-medium">Ingen behörighet</h1>
+        <p className="text-sm text-gray-500">
+          Den här sidan kräver admin-behörighet.
+          Kontakta Vidder om du behöver åtkomst.
+        </p>
       </div>
     )
   }
