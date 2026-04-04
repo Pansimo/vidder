@@ -45,19 +45,26 @@ export default async function RedigeraKursPage({ params }: Props) {
 
     const name = formData.get('name') as string
     const description = formData.get('description') as string
-    const course_type = formData.get('course_type') as string
-    const active_from = (formData.get('active_from') as string) || null
-    const active_to = (formData.get('active_to') as string) || null
     const access = formData.get('access') as string
     const is_public = access === 'public'
     const requires_premium = access === 'premium'
+    const activeFrom = formData.get('active_from') as string | null
+    const activeTo = formData.get('active_to') as string | null
 
-    console.log('[updateCourse] updating:', { name, access, is_public, requires_premium, id })
+    console.log('[updateCourse] updating:', { name, access, is_public, requires_premium, activeFrom, activeTo, id })
 
     const { error } = await supabase
       .from('orienteering_courses')
-      .update({ name, description, course_type, active_from, active_to, is_public, requires_premium })
+      .update({
+        name,
+        description,
+        is_public,
+        requires_premium,
+        ...(activeFrom ? { active_from: activeFrom } : {}),
+        ...(activeTo ? { active_to: activeTo } : {}),
+      })
       .eq('id', id)
+      .eq('creator_id', user.id)
 
     console.log('[updateCourse] result error:', error?.message ?? 'none')
 
