@@ -36,8 +36,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/app", request.url));
   }
 
-  // Protect /app/* — redirect unauthenticated users to /login
-  if (!user && pathname.startsWith("/app")) {
+  // Protect /app/* and /kurator/* — redirect unauthenticated users to /login
+  if (!user && (pathname.startsWith("/app") || pathname.startsWith("/kurator"))) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
