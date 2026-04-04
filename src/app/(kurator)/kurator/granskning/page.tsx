@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { approveControl, rejectControl } from './actions'
 
 export default async function GranskningPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) return null
 
   const { data: callerProfile } = await supabase
     .from('profiles')
@@ -14,7 +13,14 @@ export default async function GranskningPage() {
     .eq('id', user.id)
     .single()
 
-  if (!callerProfile?.is_admin) redirect('/kurator')
+  if (!callerProfile?.is_admin) {
+    return (
+      <div className="p-6">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">Granskning</h1>
+        <p className="text-sm text-gray-400">Du behöver admin-behörighet för att granska kontroller.</p>
+      </div>
+    )
+  }
 
   const { data: pending } = await supabase
     .from('orienteering_controls')
