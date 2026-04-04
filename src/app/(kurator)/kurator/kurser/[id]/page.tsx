@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import AccessSelector from './AccessSelector'
+import SavedToast from './SavedToast'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -35,13 +36,8 @@ export default async function RedigeraKursPage({ params }: Props) {
     const { createClient } = await import('@/lib/supabase/server')
     const supabase = await createClient()
 
-    console.log('[updateCourse] called, access:', formData.get('access'), 'name:', formData.get('name'))
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      console.log('[updateCourse] no user')
-      return
-    }
+    if (!user) return
 
     const name = formData.get('name') as string
     const description = formData.get('description') as string
@@ -51,9 +47,7 @@ export default async function RedigeraKursPage({ params }: Props) {
     const activeFrom = formData.get('active_from') as string | null
     const activeTo = formData.get('active_to') as string | null
 
-    console.log('[updateCourse] updating:', { name, access, is_public, requires_premium, activeFrom, activeTo, id })
-
-    const { error } = await supabase
+    await supabase
       .from('orienteering_courses')
       .update({
         name,
@@ -66,10 +60,8 @@ export default async function RedigeraKursPage({ params }: Props) {
       .eq('id', id)
       .eq('creator_id', user.id)
 
-    console.log('[updateCourse] result error:', error?.message ?? 'none')
-
     revalidatePath(`/kurator/kurser/${id}`)
-    redirect(`/kurator/kurser/${id}`)
+    redirect(`/kurator/kurser/${id}?saved=1`)
   }
 
   async function publishCourse() {
@@ -106,6 +98,7 @@ export default async function RedigeraKursPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
+      <SavedToast />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Redigera bana</h1>
         <Link
