@@ -188,7 +188,7 @@ export default async function RedigeraKursPage({ params }: Props) {
 
         <button
           type="submit"
-          className="w-full rounded-md px-4 py-2 text-sm font-medium text-white"
+          className="w-full cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98]"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >
           Spara ändringar
@@ -218,7 +218,7 @@ export default async function RedigeraKursPage({ params }: Props) {
             <button
               type="submit"
               disabled={!canPublish}
-              className="w-full rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+              className="w-full cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               style={{ backgroundColor: 'var(--color-primary)' }}
             >
               Publicera bana
