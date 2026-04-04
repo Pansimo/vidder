@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
+import AccessSelector from './AccessSelector'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -37,6 +38,7 @@ export default async function RedigeraKursPage({ params }: Props) {
     if (!user) return
 
     const access = formData.get('access') as string
+    const is_public = access === 'public'
     const requires_premium = access === 'premium'
 
     await sb
@@ -47,6 +49,7 @@ export default async function RedigeraKursPage({ params }: Props) {
         course_type: formData.get('course_type') as string,
         active_from: (formData.get('active_from') as string) || null,
         active_to: (formData.get('active_to') as string) || null,
+        is_public,
         requires_premium,
       })
       .eq('id', id)
@@ -176,27 +179,10 @@ export default async function RedigeraKursPage({ params }: Props) {
           </div>
         </div>
 
-        <fieldset className="rounded-xl border border-gray-100 p-4">
-          <legend className="px-2 text-sm font-medium">Åtkomst</legend>
-          <div className="mt-2 flex flex-col gap-3">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input type="radio" name="access" value="public"
-                defaultChecked={!course.requires_premium} className="mt-1" />
-              <div>
-                <p className="text-sm font-medium">Publik för alla</p>
-                <p className="text-xs text-gray-500">Alla användare kan se och stämpla banan</p>
-              </div>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input type="radio" name="access" value="premium"
-                defaultChecked={course.requires_premium} className="mt-1" />
-              <div>
-                <p className="text-sm font-medium">Kräver premium</p>
-                <p className="text-xs text-gray-500">Bara premium-användare ser och kan stämpla</p>
-              </div>
-            </label>
-          </div>
-        </fieldset>
+        <AccessSelector
+          isPublic={course.is_public ?? false}
+          requiresPremium={course.requires_premium ?? false}
+        />
 
         <button
           type="submit"
