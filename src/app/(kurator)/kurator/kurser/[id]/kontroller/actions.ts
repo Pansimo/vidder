@@ -17,10 +17,11 @@ export async function addControl(courseId: string, lat: number, lng: number, ord
       order_index: orderIndex,
       name: '',
       description: '',
-      clue: '',
-      difficulty: 'medium',
+      hint: '',
+      difficulty: 'easy',
       radius_m: 25,
       requires_photo: false,
+      accessibility: 'terrain',
     })
     .select()
     .single()

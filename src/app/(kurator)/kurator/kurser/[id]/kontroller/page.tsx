@@ -24,5 +24,17 @@ export default async function KontrollerPage({ params }: Props) {
     .eq('course_id', id)
     .order('order_index', { ascending: true })
 
-  return <ControlEditor course={course} initialControls={controls ?? []} />
+  const { data: subCourses } = await supabase
+    .from('orienteering_sub_courses')
+    .select('id, name')
+    .eq('course_id', id)
+    .order('sort_order', { ascending: true })
+
+  return (
+    <ControlEditor
+      course={course}
+      initialControls={controls ?? []}
+      subCourses={subCourses ?? []}
+    />
+  )
 }

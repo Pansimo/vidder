@@ -12,10 +12,20 @@ interface Control {
   order_index: number
   name: string
   description: string
-  clue: string
+  hint: string
   difficulty: string
   radius_m: number
   requires_photo: boolean
+  safety_note: string
+  category: string
+  access_type: string
+  sub_course_id: string | null
+  accessibility: 'terrain' | 'walkable' | 'wheelchair'
+}
+
+interface SubCourse {
+  id: string
+  name: string
 }
 
 interface Course {
@@ -27,6 +37,7 @@ interface Course {
 interface Props {
   course: Course
   initialControls: Control[]
+  subCourses: SubCourse[]
 }
 
 const DEFAULT_CENTER: [number, number] = [18.0686, 59.3293]
@@ -34,7 +45,7 @@ const DEFAULT_ZOOM = 5
 const CIRCLE_SOURCE_ID = 'control-circles'
 const CIRCLE_LAYER_ID = 'control-circles-layer'
 
-export default function ControlEditor({ course, initialControls }: Props) {
+export default function ControlEditor({ course, initialControls, subCourses }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
@@ -292,6 +303,11 @@ export default function ControlEditor({ course, initialControls }: Props) {
               <span className="flex-1 truncate text-gray-800">
                 {ctrl.name || 'Namnlös kontroll'}
               </span>
+              {ctrl.accessibility !== 'terrain' && (
+                <span className="text-xs text-gray-400" title={ctrl.accessibility}>
+                  {ctrl.accessibility === 'wheelchair' ? '♿' : '🚶'}
+                </span>
+              )}
               {isSequential && (
                 <div className="flex gap-0.5">
                   <button
@@ -357,8 +373,8 @@ export default function ControlEditor({ course, initialControls }: Props) {
               <span className="mb-1 block text-xs font-medium text-gray-500">Ledtråd</span>
               <textarea
                 rows={2}
-                value={selectedControl.clue}
-                onChange={(e) => handleFieldChange('clue', e.target.value)}
+                value={selectedControl.hint}
+                onChange={(e) => handleFieldChange('hint', e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
                 style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
               />
@@ -373,11 +389,76 @@ export default function ControlEditor({ course, initialControls }: Props) {
                 style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
               >
                 <option value="easy">Lätt</option>
-                <option value="medium">Medel</option>
+                <option value="moderate">Medel</option>
                 <option value="hard">Svår</option>
                 <option value="expert">Expert</option>
               </select>
             </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-gray-500">Tillgänglighet</span>
+              <select
+                value={selectedControl.accessibility}
+                onChange={(e) => handleFieldChange('accessibility', e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
+              >
+                <option value="terrain">Terräng</option>
+                <option value="walkable">Gångvänlig</option>
+                <option value="wheelchair">Rullstol</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-gray-500">Kategori</span>
+              <select
+                value={selectedControl.category ?? ''}
+                onChange={(e) => handleFieldChange('category', e.target.value || null)}
+                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
+              >
+                <option value="">Ingen</option>
+                <option value="viewpoint">Utsiktspunkt</option>
+                <option value="nature">Natur</option>
+                <option value="cafe">Café</option>
+                <option value="monument">Monument</option>
+                <option value="hidden">Gömd</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-gray-500">Åtkomst</span>
+              <select
+                value={selectedControl.access_type ?? ''}
+                onChange={(e) => handleFieldChange('access_type', e.target.value || null)}
+                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
+              >
+                <option value="">Standard</option>
+                <option value="car">Bil</option>
+                <option value="walk">Promenad</option>
+                <option value="trail">Stig</option>
+                <option value="off-trail">Terräng</option>
+                <option value="climb">Klättring</option>
+              </select>
+            </label>
+
+            {subCourses.length > 0 && (
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-gray-500">Delbana</span>
+                <select
+                  value={selectedControl.sub_course_id ?? ''}
+                  onChange={(e) => handleFieldChange('sub_course_id', e.target.value || null)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
+                >
+                  <option value="">Ingen delbana</option>
+                  {subCourses.map((sc) => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-gray-500">
@@ -390,6 +471,18 @@ export default function ControlEditor({ course, initialControls }: Props) {
                 value={selectedControl.radius_m}
                 onChange={(e) => handleFieldChange('radius_m', Number(e.target.value))}
                 className="w-full"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-gray-500">Säkerhetsnotering</span>
+              <textarea
+                rows={2}
+                value={selectedControl.safety_note ?? ''}
+                onChange={(e) => handleFieldChange('safety_note', e.target.value || null)}
+                placeholder="T.ex. halt vid regn, brant sluttning..."
+                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
               />
             </label>
 
