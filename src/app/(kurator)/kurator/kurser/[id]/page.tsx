@@ -101,12 +101,20 @@ export default async function RedigeraKursPage({ params }: Props) {
       <SavedToast />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Redigera bana</h1>
-        <Link
-          href={`/kurator/kurser/${id}/kontroller`}
-          className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
-        >
-          Kontroller ({controlCount})
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/kurator/kurser/${id}/delbanor`}
+            className="btn-secondary rounded-md px-4 py-2 text-sm font-medium"
+          >
+            Delbanor
+          </Link>
+          <Link
+            href={`/kurator/kurser/${id}/kontroller`}
+            className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
+          >
+            Kontroller ({controlCount})
+          </Link>
+        </div>
       </div>
 
       <form action={updateCourse} className="space-y-4">
