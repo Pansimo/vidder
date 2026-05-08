@@ -8,23 +8,50 @@ interface Props {
   isAdmin: boolean | null
 }
 
-const NAV_ITEMS = [
-  { href: '/kurator', label: 'Dashboard' },
-  { href: '/kurator/kurser', label: 'Banor' },
-  { href: '/kurator/omraden', label: 'Områden' },
-  { href: '/kurator/poi', label: 'POI:er' },
-  { href: '/kurator/anvandare', label: 'Användare' },
-]
+interface NavItem {
+  href: string
+  label: string
+  adminOnly?: boolean
+}
 
-const ADMIN_ITEMS = [
-  { href: '/kurator/granskning', label: 'Granskning' },
-  { href: '/kurator/audit', label: 'Audit log' },
+interface NavSection {
+  title: string
+  adminOnly?: boolean
+  items: NavItem[]
+}
+
+const SECTIONS: NavSection[] = [
+  {
+    title: 'Orientering',
+    items: [
+      { href: '/kurator/kurser', label: 'Banor' },
+      { href: '/kurator/granskning', label: 'Granskning', adminOnly: true },
+    ],
+  },
+  {
+    title: 'POI',
+    items: [
+      { href: '/kurator/omraden', label: 'Områden' },
+      { href: '/kurator/poi', label: 'POI:er' },
+    ],
+  },
+  {
+    title: 'Admin',
+    adminOnly: true,
+    items: [
+      { href: '/kurator/anvandare', label: 'Användare' },
+      { href: '/kurator/audit', label: 'Audit log' },
+    ],
+  },
 ]
 
 export default function KuratorSidebar({ firstName, isAdmin }: Props) {
   const pathname = usePathname()
 
-  const items = isAdmin ? [...NAV_ITEMS, ...ADMIN_ITEMS] : NAV_ITEMS
+  function isActive(href: string) {
+    if (href === '/kurator') return pathname === '/kurator'
+    return pathname.startsWith(href)
+  }
 
   return (
     <aside className="flex w-56 flex-col border-r border-gray-200 bg-white">
@@ -36,25 +63,46 @@ export default function KuratorSidebar({ firstName, isAdmin }: Props) {
       </div>
 
       <nav className="flex-1 px-3 py-4">
-        {items.map((item) => {
-          const isActive =
-            item.href === '/kurator'
-              ? pathname === '/kurator'
-              : pathname.startsWith(item.href)
+        <Link
+          href="/kurator"
+          className={`mb-1 block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            isActive('/kurator')
+              ? 'text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+          }`}
+          style={isActive('/kurator') ? { backgroundColor: 'var(--color-primary)' } : undefined}
+        >
+          Dashboard
+        </Link>
+
+        {SECTIONS.map((section) => {
+          if (section.adminOnly && !isAdmin) return null
+
+          const visibleItems = section.items.filter(
+            (item) => !item.adminOnly || isAdmin
+          )
+          if (visibleItems.length === 0) return null
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`mb-1 block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-              style={isActive ? { backgroundColor: 'var(--color-primary)' } : undefined}
-            >
-              {item.label}
-            </Link>
+            <div key={section.title}>
+              <p className="mt-6 mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                {section.title}
+              </p>
+              {visibleItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`mb-1 block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  style={isActive(item.href) ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           )
         })}
       </nav>
