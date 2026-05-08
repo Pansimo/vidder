@@ -11,11 +11,14 @@ interface Props {
 const NAV_ITEMS = [
   { href: '/kurator', label: 'Dashboard' },
   { href: '/kurator/kurser', label: 'Banor' },
+  { href: '/kurator/omraden', label: 'Områden' },
+  { href: '/kurator/poi', label: 'POI:er' },
   { href: '/kurator/anvandare', label: 'Användare' },
 ]
 
 const ADMIN_ITEMS = [
   { href: '/kurator/granskning', label: 'Granskning' },
+  { href: '/kurator/audit', label: 'Audit log' },
 ]
 
 export default function KuratorSidebar({ firstName, isAdmin }: Props) {
