@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge from '../../_components/StatusBadge'
+import OmradenFilters from './OmradenFilters'
 import { deleteArea } from './actions'
 
 interface Props {
@@ -86,9 +87,6 @@ export default async function OmradenPage({ searchParams }: Props) {
     areaNames[a.id] = a.name
   }
 
-  const filterLevel = params.level ?? 'all'
-  const filterStatus = params.status ?? 'all'
-
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -108,29 +106,7 @@ export default async function OmradenPage({ searchParams }: Props) {
         <StatCard label="Aktiverade i app" value={readyCount ?? 0} />
       </div>
 
-      <div className="mb-4 flex gap-2">
-        <FilterSelect
-          name="level"
-          value={filterLevel}
-          options={[
-            { value: 'all', label: 'Alla nivåer' },
-            { value: '1', label: 'Makroområden' },
-            { value: '2', label: 'Subområden' },
-          ]}
-          otherParams={{ status: filterStatus }}
-        />
-        <FilterSelect
-          name="status"
-          value={filterStatus}
-          options={[
-            { value: 'all', label: 'Alla statusar' },
-            { value: 'draft', label: 'Utkast' },
-            { value: 'review', label: 'Granskning' },
-            { value: 'published', label: 'Publicerat' },
-          ]}
-          otherParams={{ level: filterLevel }}
-        />
-      </div>
+      <OmradenFilters />
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <table className="w-full text-left text-sm">
@@ -210,35 +186,6 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <p className="text-sm text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
     </div>
-  )
-}
-
-function FilterSelect({ name, value, options, otherParams }: {
-  name: string
-  value: string
-  options: { value: string; label: string }[]
-  otherParams: Record<string, string>
-}) {
-  // Build URL params for each option
-  return (
-    <form>
-      {Object.entries(otherParams).map(([k, v]) =>
-        v !== 'all' ? <input key={k} type="hidden" name={k} value={v} /> : null
-      )}
-      <select
-        name={name}
-        defaultValue={value}
-        onChange={(e) => {
-          const form = e.target.closest('form')
-          if (form) form.requestSubmit()
-        }}
-        className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-      >
-        {options.map(o => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </form>
   )
 }
 
