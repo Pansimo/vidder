@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { uploadImage } from './upload-action'
 
 interface Props {
   bucket?: string
@@ -21,63 +21,28 @@ export default function ImageUploader({
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const supabase = createClient()
-
   async function handleFile(file: File) {
     setError(null)
     setUploading(true)
 
-    // Debug: log session state
-    const { data: { session } } = await supabase.auth.getSession()
-    console.log('[ImageUploader] Session exists:', !!session)
-    console.log('[ImageUploader] Access token (first 20):', session?.access_token?.slice(0, 20))
-    console.log('[ImageUploader] User ID:', session?.user?.id)
-    console.log('[ImageUploader] User role:', session?.user?.role)
-
     const ext = file.name.split('.').pop() ?? 'jpg'
     const path = `${pathPrefix}hero.${ext}`
-    console.log('[ImageUploader] Upload path:', path, 'Bucket:', bucket)
 
-    // Test 1: supabase-js upload
-    const { error: uploadError, data: uploadData } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert: true })
+    const formData = new FormData()
+    formData.set('file', file)
 
-    console.log('[ImageUploader] Upload result:', { error: uploadError, data: uploadData })
+    const result = await uploadImage(bucket, path, formData)
 
-    if (uploadError) {
-      // Test 2: raw fetch fallback to diagnose
-      console.log('[ImageUploader] supabase-js failed, trying raw fetch...')
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/${bucket}/${path}`
-      const fetchRes = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token ?? ''}`,
-          'x-upsert': 'true',
-        },
-        body: file,
-      })
-      const fetchBody = await fetchRes.text()
-      console.log('[ImageUploader] Raw fetch status:', fetchRes.status, 'body:', fetchBody)
-
-      if (fetchRes.ok) {
-        console.log('[ImageUploader] Raw fetch SUCCEEDED — supabase-js bug')
-        // Use the raw fetch result
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path)
-        setPreview(data.publicUrl)
-        onUploaded(data.publicUrl)
-        setUploading(false)
-        return
-      }
-
-      setError(uploadError.message)
+    if (result.error) {
+      setError(result.error)
       setUploading(false)
       return
     }
 
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
-    setPreview(data.publicUrl)
-    onUploaded(data.publicUrl)
+    if (result.url) {
+      setPreview(result.url)
+      onUploaded(result.url)
+    }
     setUploading(false)
   }
 
