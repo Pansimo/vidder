@@ -133,6 +133,7 @@ export default async function OmradenPage({ searchParams }: Props) {
               <th className="px-4 py-3 text-center">Sub</th>
               <th className="px-4 py-3 text-center">POI:er</th>
               <SortableHeader column="priority" label="Prio" />
+              <SortableHeader column="updated" label="Uppdaterad" />
               <th className="px-4 py-3">Åtgärder</th>
             </tr>
           </thead>
@@ -168,6 +169,7 @@ export default async function OmradenPage({ searchParams }: Props) {
                 </td>
                 <td className="px-4 py-3 text-center text-gray-600">{getPoiCount(area)}</td>
                 <td className="px-4 py-3 text-center text-gray-600">{area.naming_priority}</td>
+                <td className="px-4 py-3 text-xs text-gray-500">{area.updated_at ? new Date(area.updated_at).toLocaleDateString('sv-SE') : ''}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <Link
@@ -184,7 +186,7 @@ export default async function OmradenPage({ searchParams }: Props) {
             ))}
             {(!areas || areas.length === 0) && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                   Inga områden matchar filtret.
                 </td>
               </tr>

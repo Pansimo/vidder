@@ -93,6 +93,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
               <SortableHeader column="status" label="Status" />
               <th className="px-4 py-3 text-center">{'\u2605'}</th>
               <SortableHeader column="priority" label="Prio" />
+              <SortableHeader column="updated" label="Uppdaterad" />
               <th className="px-4 py-3">Åtgärder</th>
             </tr>
           </thead>
@@ -125,6 +126,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
                   <td className="px-4 py-3"><StatusBadge status={poi.status} /></td>
                   <td className="px-4 py-3 text-center">{poi.is_featured ? '\u2605' : ''}</td>
                   <td className="px-4 py-3 text-center text-gray-600">{poi.display_priority}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{poi.updated_at ? new Date(poi.updated_at).toLocaleDateString('sv-SE') : ''}</td>
                   <td className="px-4 py-3">
                     <Link
                       href={detailHref}
@@ -139,7 +141,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
             })}
             {(!pois || pois.length === 0) && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   Inga POI:er matchar filtret.
                 </td>
               </tr>
