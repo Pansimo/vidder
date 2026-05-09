@@ -19,24 +19,31 @@ function slugify(name: string): string {
     .replace(/_+/g, '_')
 }
 
-async function requireCurator() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Ej inloggad')
+async function requireCurator():
+  Promise<{ supabase: Awaited<ReturnType<typeof createClient>>; user: { id: string }; profile: { is_curator: boolean; is_admin: boolean }; error?: never } | { error: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Du är inte inloggad' }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_curator, is_admin')
-    .eq('id', user.id)
-    .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_curator, is_admin')
+      .eq('id', user.id)
+      .single()
 
-  if (!profile?.is_curator) throw new Error('Ej kurator')
+    if (!profile?.is_curator) return { error: 'Du saknar behörighet för denna åtgärd' }
 
-  return { supabase, user, profile }
+    return { supabase, user, profile }
+  } catch {
+    return { error: 'Kunde inte verifiera behörighet' }
+  }
 }
 
 export async function createPoi(macroId: string, subId: string, formData: FormData) {
-  const { supabase } = await requireCurator()
+  const auth = await requireCurator()
+  if ('error' in auth) return { error: auth.error }
+  const { supabase } = auth
 
   const name = (formData.get('name') as string)?.trim()
   if (!name) return { error: 'Namn krävs' }
@@ -95,7 +102,9 @@ export async function createPoi(macroId: string, subId: string, formData: FormDa
 }
 
 export async function updatePoi(id: string, macroId: string, subId: string, formData: FormData) {
-  const { supabase } = await requireCurator()
+  const auth = await requireCurator()
+  if ('error' in auth) return { error: auth.error }
+  const { supabase } = auth
 
   const name = (formData.get('name') as string)?.trim()
   if (!name) return { error: 'Namn krävs' }
@@ -147,7 +156,9 @@ export async function updatePoi(id: string, macroId: string, subId: string, form
 }
 
 export async function deletePoi(id: string, macroId: string, subId: string) {
-  const { supabase } = await requireCurator()
+  const auth = await requireCurator()
+  if ('error' in auth) return { error: auth.error }
+  const { supabase } = auth
 
   // Delete collection links first
   await supabase
@@ -168,7 +179,9 @@ export async function deletePoi(id: string, macroId: string, subId: string) {
 }
 
 export async function transitionPoiStatus(id: string, macroId: string, subId: string, newStatus: string) {
-  const { supabase, profile } = await requireCurator()
+  const auth = await requireCurator()
+  if ('error' in auth) return { error: auth.error }
+  const { supabase, profile } = auth
 
   if (newStatus === 'published' && !profile.is_admin) {
     return { error: 'Bara admin kan publicera' }
