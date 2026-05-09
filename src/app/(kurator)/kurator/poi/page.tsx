@@ -57,6 +57,12 @@ export default async function AllaPoisPage({ searchParams }: Props) {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Alla POI:er</h1>
+        <Link
+          href="/kurator/poi/ny"
+          className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
+        >
+          Ny POI
+        </Link>
       </div>
 
       <PoiFilters subAreas={subAreas} />

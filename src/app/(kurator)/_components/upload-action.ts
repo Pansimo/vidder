@@ -3,6 +3,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
+const MIME_MAP: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  avif: 'image/avif',
+}
+
 export async function uploadImage(
   bucket: string,
   path: string,
@@ -26,25 +36,45 @@ export async function uploadImage(
     const file = formData.get('file') as File
     if (!file || file.size === 0) return { error: 'Ingen fil vald' }
 
-    // Convert File to Buffer for server-side upload
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return { error: 'SUPABASE_SERVICE_ROLE_KEY saknas i miljövariabler' }
     }
 
-    // Use service_role client for storage (bypasses RLS)
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
+    // Derive contentType from file extension (file.type may be lost in Server Action serialization)
+    const ext = path.split('.').pop()?.toLowerCase() ?? ''
+    const contentType = MIME_MAP[ext] || file.type || 'application/octet-stream'
+
+    // Delete old hero.* files in the same folder before uploading
+    const folder = path.substring(0, path.lastIndexOf('/'))
+    if (folder) {
+      const { data: existing } = await serviceClient.storage
+        .from(bucket)
+        .list(folder)
+
+      if (existing) {
+        const heroFiles = existing.filter(f => f.name.startsWith('hero.'))
+        if (heroFiles.length > 0) {
+          await serviceClient.storage
+            .from(bucket)
+            .remove(heroFiles.map(f => `${folder}/${f.name}`))
+        }
+      }
+    }
+
+    // Convert File to Buffer for server-side upload
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
     const { error } = await serviceClient.storage
       .from(bucket)
       .upload(path, buffer, {
         upsert: true,
-        contentType: file.type || 'image/jpeg',
+        contentType,
       })
 
     if (error) return { error: error.message }
