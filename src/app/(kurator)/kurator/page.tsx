@@ -12,6 +12,9 @@ export default async function KuratorDashboard() {
     .single()
 
   const isAdmin = profile?.is_admin ?? false
+  console.log('[Dashboard] user.id:', user?.id)
+  console.log('[Dashboard] profile:', profile)
+  console.log('[Dashboard] isAdmin:', isAdmin)
 
   const { count: courseCount } = await supabase
     .from('orienteering_courses')
