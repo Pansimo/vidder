@@ -91,29 +91,20 @@ export async function saveHeroImageUrl(
   id: string,
   url: string
 ): Promise<{ error?: string }> {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  console.log('[saveHeroImageUrl] table:', table, 'id:', id)
-  console.log('[saveHeroImageUrl] url:', url)
-  console.log('[saveHeroImageUrl] key exists:', !!key, 'key prefix:', key?.slice(0, 15))
-
-  if (!key) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { error: 'SUPABASE_SERVICE_ROLE_KEY saknas' }
   }
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    key
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
-  const { error, data, status, statusText } = await serviceClient
+  const { error, data } = await serviceClient
     .from(table)
     .update({ hero_image_url: url })
     .eq('id', id)
     .select('id')
-
-  console.log('[saveHeroImageUrl] status:', status, statusText)
-  console.log('[saveHeroImageUrl] error:', error)
-  console.log('[saveHeroImageUrl] data:', data)
 
   if (error) return { error: error.message }
   if (!data || data.length === 0) return { error: `Hittade ingen rad med id=${id} i ${table}` }
