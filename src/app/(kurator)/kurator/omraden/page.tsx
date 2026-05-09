@@ -30,6 +30,8 @@ export default async function OmradenPage({ searchParams }: Props) {
   // Sorting
   const sortMap: Record<string, string> = {
     name: 'name',
+    level: 'level',
+    type: 'type',
     status: 'status',
     updated: 'updated_at',
     priority: 'naming_priority',
@@ -127,8 +129,8 @@ export default async function OmradenPage({ searchParams }: Props) {
           <thead className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase text-gray-500">
             <tr>
               <SortableHeader column="name" label="Namn" />
-              <th className="px-4 py-3">Nivå</th>
-              <th className="px-4 py-3">Typ</th>
+              <SortableHeader column="level" label="Nivå" />
+              <SortableHeader column="type" label="Typ" />
               <SortableHeader column="status" label="Status" />
               <th className="px-4 py-3 text-center">Sub</th>
               <th className="px-4 py-3 text-center">POI:er</th>

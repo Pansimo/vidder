@@ -33,6 +33,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
   const sortMap: Record<string, string> = {
     name: 'name',
     category: 'category',
+    area: 'area_id',
     status: 'status',
     updated: 'updated_at',
     priority: 'display_priority',
@@ -89,7 +90,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
             <tr>
               <SortableHeader column="name" label="Namn" />
               <SortableHeader column="category" label="Kategori" />
-              <th className="px-4 py-3">Subområde</th>
+              <SortableHeader column="area" label="Subområde" />
               <SortableHeader column="status" label="Status" />
               <th className="px-4 py-3 text-center">{'\u2605'}</th>
               <SortableHeader column="priority" label="Prio" />
