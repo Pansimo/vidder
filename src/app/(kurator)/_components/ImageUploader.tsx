@@ -1,13 +1,18 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { uploadImage } from './upload-action'
+import { uploadImage, saveHeroImageUrl } from './upload-action'
 
 interface Props {
   bucket?: string
   pathPrefix: string
   currentUrl: string | null
   onUploaded: (url: string) => void
+  /** If set, auto-saves hero_image_url to DB after upload */
+  autoSave?: {
+    table: 'curated_areas' | 'curated_pois'
+    id: string
+  }
 }
 
 export default function ImageUploader({
@@ -15,6 +20,7 @@ export default function ImageUploader({
   pathPrefix,
   currentUrl,
   onUploaded,
+  autoSave,
 }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(currentUrl)
@@ -41,9 +47,16 @@ export default function ImageUploader({
 
     if (result.url) {
       // Cache-bust to force browser to show new image
-      const bustUrl = `${result.url}?v=${Date.now()}`
-      setPreview(bustUrl)
+      setPreview(`${result.url}?v=${Date.now()}`)
       onUploaded(result.url)
+
+      // Auto-save to DB if configured
+      if (autoSave) {
+        const saveResult = await saveHeroImageUrl(autoSave.table, autoSave.id, result.url)
+        if (saveResult.error) {
+          setError(`Bild uppladdad men kunde inte spara URL: ${saveResult.error}`)
+        }
+      }
     }
     setUploading(false)
   }

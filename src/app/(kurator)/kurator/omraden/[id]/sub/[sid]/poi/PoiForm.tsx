@@ -220,6 +220,7 @@ export default function PoiForm({
               pathPrefix={poi ? `pois/${poi.id}/` : 'pois/temp/'}
               currentUrl={heroImageUrl}
               onUploaded={setHeroImageUrl}
+              autoSave={poi ? { table: 'curated_pois', id: poi.id } : undefined}
             />
           </div>
         </div>

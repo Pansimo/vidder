@@ -79,9 +79,27 @@ export async function uploadImage(
 
     if (error) return { error: error.message }
 
-    const { data } = serviceClient.storage.from(bucket).getPublicUrl(path)
-    return { url: data.publicUrl }
+    const { data: urlData } = serviceClient.storage.from(bucket).getPublicUrl(path)
+    return { url: urlData.publicUrl }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Okänt fel vid uppladdning' }
   }
+}
+
+export async function saveHeroImageUrl(
+  table: 'curated_areas' | 'curated_pois',
+  id: string,
+  url: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Ej inloggad' }
+
+  const { error } = await supabase
+    .from(table)
+    .update({ hero_image_url: url })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+  return {}
 }

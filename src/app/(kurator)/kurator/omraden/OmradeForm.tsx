@@ -278,6 +278,7 @@ export default function OmradeForm({ area, mode, isAdmin, parentOptions, default
               pathPrefix={area ? `areas/${area.id}/` : 'areas/temp/'}
               currentUrl={heroImageUrl}
               onUploaded={setHeroImageUrl}
+              autoSave={area ? { table: 'curated_areas', id: area.id } : undefined}
             />
           </div>
 
