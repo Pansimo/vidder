@@ -91,21 +91,29 @@ export async function saveHeroImageUrl(
   id: string,
   url: string
 ): Promise<{ error?: string }> {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  console.log('[saveHeroImageUrl] table:', table, 'id:', id)
+  console.log('[saveHeroImageUrl] url:', url)
+  console.log('[saveHeroImageUrl] key exists:', !!key, 'key prefix:', key?.slice(0, 15))
+
+  if (!key) {
     return { error: 'SUPABASE_SERVICE_ROLE_KEY saknas' }
   }
 
-  // Use service_role to bypass RLS (same pattern as upload)
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    key
   )
 
-  const { error, data } = await serviceClient
+  const { error, data, status, statusText } = await serviceClient
     .from(table)
     .update({ hero_image_url: url })
     .eq('id', id)
     .select('id')
+
+  console.log('[saveHeroImageUrl] status:', status, statusText)
+  console.log('[saveHeroImageUrl] error:', error)
+  console.log('[saveHeroImageUrl] data:', data)
 
   if (error) return { error: error.message }
   if (!data || data.length === 0) return { error: `Hittade ingen rad med id=${id} i ${table}` }
