@@ -25,7 +25,7 @@ export default function ImageUploader({
     setError(null)
     setUploading(true)
 
-    const ext = file.name.split('.').pop() ?? 'jpg'
+    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
     const path = `${pathPrefix}hero.${ext}`
 
     const formData = new FormData()
@@ -40,7 +40,9 @@ export default function ImageUploader({
     }
 
     if (result.url) {
-      setPreview(result.url)
+      // Cache-bust to force browser to show new image
+      const bustUrl = `${result.url}?v=${Date.now()}`
+      setPreview(bustUrl)
       onUploaded(result.url)
     }
     setUploading(false)
