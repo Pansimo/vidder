@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import SearchInput from '../../_components/SearchInput'
 
 interface AreaOption {
   id: string
@@ -31,6 +32,7 @@ export default function PoiFilters({ subAreas }: Props) {
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
+      <SearchInput placeholder="Sök namn / beskrivning..." />
       <select
         defaultValue={params.get('area') ?? 'all'}
         onChange={e => setParam('area', e.target.value)}

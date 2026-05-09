@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge from '../../_components/StatusBadge'
+import SortableHeader from '../../_components/SortableHeader'
 import OmradenFilters from './OmradenFilters'
 import { deleteArea } from './actions'
 
 interface Props {
-  searchParams: Promise<{ level?: string; status?: string }>
+  searchParams: Promise<{ level?: string; status?: string; q?: string; sort?: string; dir?: string }>
 }
 
 export default async function OmradenPage({ searchParams }: Props) {
@@ -14,8 +15,7 @@ export default async function OmradenPage({ searchParams }: Props) {
 
   let query = supabase
     .from('curated_areas')
-    .select('id, name, level, parent_area_id, type, status, ready_for_app, naming_priority')
-    .order('naming_priority', { ascending: false })
+    .select('id, name, level, parent_area_id, type, status, ready_for_app, naming_priority, updated_at')
 
   if (params.level && params.level !== 'all') {
     query = query.eq('level', parseInt(params.level))
@@ -23,6 +23,20 @@ export default async function OmradenPage({ searchParams }: Props) {
   if (params.status && params.status !== 'all') {
     query = query.eq('status', params.status)
   }
+  if (params.q) {
+    query = query.ilike('name', `%${params.q}%`)
+  }
+
+  // Sorting
+  const sortMap: Record<string, string> = {
+    name: 'name',
+    status: 'status',
+    updated: 'updated_at',
+    priority: 'naming_priority',
+  }
+  const sortCol = sortMap[params.sort ?? ''] ?? 'name'
+  const sortDir = params.dir ?? 'asc'
+  query = query.order(sortCol, { ascending: sortDir === 'asc' })
 
   const { data: areas } = await query
 
@@ -50,12 +64,10 @@ export default async function OmradenPage({ searchParams }: Props) {
     .eq('level', 2)
 
   const subCountByParent: Record<string, number> = {}
-  const subIds = new Set<string>()
   for (const sub of subAreas ?? []) {
     if (sub.parent_area_id) {
       subCountByParent[sub.parent_area_id] = (subCountByParent[sub.parent_area_id] ?? 0) + 1
     }
-    subIds.add(sub.id)
   }
 
   // Get POI counts per area
@@ -68,10 +80,8 @@ export default async function OmradenPage({ searchParams }: Props) {
     poiCountByArea[poi.area_id] = (poiCountByArea[poi.area_id] ?? 0) + 1
   }
 
-  // For macro areas: sum POI counts of their sub-areas
   function getPoiCount(area: { id: string; level: number }): number {
     if (area.level === 2) return poiCountByArea[area.id] ?? 0
-    // Macro: sum POIs in all sub-areas
     let total = 0
     for (const sub of subAreas ?? []) {
       if (sub.parent_area_id === area.id) {
@@ -81,9 +91,13 @@ export default async function OmradenPage({ searchParams }: Props) {
     return total
   }
 
-  // Map parent names
+  // Map parent names (from all areas, not just filtered)
+  const { data: allAreas } = await supabase
+    .from('curated_areas')
+    .select('id, name')
+
   const areaNames: Record<string, string> = {}
-  for (const a of areas ?? []) {
+  for (const a of allAreas ?? []) {
     areaNames[a.id] = a.name
   }
 
@@ -112,12 +126,13 @@ export default async function OmradenPage({ searchParams }: Props) {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase text-gray-500">
             <tr>
-              <th className="px-4 py-3">Namn</th>
+              <SortableHeader column="name" label="Namn" />
               <th className="px-4 py-3">Nivå</th>
               <th className="px-4 py-3">Typ</th>
-              <th className="px-4 py-3">Status</th>
+              <SortableHeader column="status" label="Status" />
               <th className="px-4 py-3 text-center">Sub</th>
               <th className="px-4 py-3 text-center">POI:er</th>
+              <SortableHeader column="priority" label="Prio" />
               <th className="px-4 py-3">Åtgärder</th>
             </tr>
           </thead>
@@ -149,9 +164,10 @@ export default async function OmradenPage({ searchParams }: Props) {
                   )}
                 </td>
                 <td className="px-4 py-3 text-center text-gray-600">
-                  {area.level === 1 ? (subCountByParent[area.id] ?? 0) : '—'}
+                  {area.level === 1 ? (subCountByParent[area.id] ?? 0) : '\u2014'}
                 </td>
                 <td className="px-4 py-3 text-center text-gray-600">{getPoiCount(area)}</td>
+                <td className="px-4 py-3 text-center text-gray-600">{area.naming_priority}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <Link
@@ -168,7 +184,7 @@ export default async function OmradenPage({ searchParams }: Props) {
             ))}
             {(!areas || areas.length === 0) && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   Inga områden matchar filtret.
                 </td>
               </tr>

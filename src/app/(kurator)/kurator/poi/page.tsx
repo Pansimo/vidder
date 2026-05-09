@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge from '../../_components/StatusBadge'
+import SortableHeader from '../../_components/SortableHeader'
 import PoiFilters from './PoiFilters'
 
 interface Props {
-  searchParams: Promise<{ area?: string; category?: string; status?: string }>
+  searchParams: Promise<{ area?: string; category?: string; status?: string; q?: string; sort?: string; dir?: string }>
 }
 
 export default async function AllaPoisPage({ searchParams }: Props) {
@@ -13,8 +14,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
 
   let query = supabase
     .from('curated_pois')
-    .select('id, name, category, status, is_featured, display_priority, short_description, area_id')
-    .order('display_priority', { ascending: false })
+    .select('id, name, category, status, is_featured, display_priority, short_description, area_id, updated_at')
 
   if (params.area && params.area !== 'all') {
     query = query.eq('area_id', params.area)
@@ -25,6 +25,21 @@ export default async function AllaPoisPage({ searchParams }: Props) {
   if (params.status && params.status !== 'all') {
     query = query.eq('status', params.status)
   }
+  if (params.q) {
+    query = query.or(`name.ilike.%${params.q}%,short_description.ilike.%${params.q}%`)
+  }
+
+  // Sorting
+  const sortMap: Record<string, string> = {
+    name: 'name',
+    category: 'category',
+    status: 'status',
+    updated: 'updated_at',
+    priority: 'display_priority',
+  }
+  const sortCol = sortMap[params.sort ?? ''] ?? 'name'
+  const sortDir = params.dir ?? 'asc'
+  query = query.order(sortCol, { ascending: sortDir === 'asc' })
 
   const { data: pois } = await query
 
@@ -43,7 +58,6 @@ export default async function AllaPoisPage({ searchParams }: Props) {
     .filter(a => a.level === 2)
     .map(a => ({ id: a.id, name: a.name }))
 
-  // Resolve macro ID for each POI's sub-area (for drill-down links)
   function getMacroId(areaId: string): string | null {
     const area = areaMap[areaId]
     if (!area) return null
@@ -73,11 +87,12 @@ export default async function AllaPoisPage({ searchParams }: Props) {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase text-gray-500">
             <tr>
-              <th className="px-4 py-3">Namn</th>
-              <th className="px-4 py-3">Kategori</th>
+              <SortableHeader column="name" label="Namn" />
+              <SortableHeader column="category" label="Kategori" />
               <th className="px-4 py-3">Subområde</th>
-              <th className="px-4 py-3">Status</th>
+              <SortableHeader column="status" label="Status" />
               <th className="px-4 py-3 text-center">{'\u2605'}</th>
+              <SortableHeader column="priority" label="Prio" />
               <th className="px-4 py-3">Åtgärder</th>
             </tr>
           </thead>
@@ -109,6 +124,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={poi.status} /></td>
                   <td className="px-4 py-3 text-center">{poi.is_featured ? '\u2605' : ''}</td>
+                  <td className="px-4 py-3 text-center text-gray-600">{poi.display_priority}</td>
                   <td className="px-4 py-3">
                     <Link
                       href={detailHref}
@@ -123,7 +139,7 @@ export default async function AllaPoisPage({ searchParams }: Props) {
             })}
             {(!pois || pois.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   Inga POI:er matchar filtret.
                 </td>
               </tr>
