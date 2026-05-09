@@ -91,15 +91,23 @@ export async function saveHeroImageUrl(
   id: string,
   url: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Ej inloggad' }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { error: 'SUPABASE_SERVICE_ROLE_KEY saknas' }
+  }
 
-  const { error } = await supabase
+  // Use service_role to bypass RLS (same pattern as upload)
+  const serviceClient = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  const { error, data } = await serviceClient
     .from(table)
     .update({ hero_image_url: url })
     .eq('id', id)
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!data || data.length === 0) return { error: `Hittade ingen rad med id=${id} i ${table}` }
   return {}
 }
