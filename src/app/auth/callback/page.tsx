@@ -17,20 +17,24 @@ function CallbackHandler() {
       const hash = window.location.hash.substring(1);
       if (hash) {
         const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
         const type = hashParams.get("type");
 
-        // createBrowserClient auto-detects hash tokens and sets session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-        if (session) {
-          if (type === "recovery") {
-            router.replace("/auth/reset-password");
+          if (!error) {
+            if (type === "recovery") {
+              router.replace("/auth/reset-password");
+              return;
+            }
+            router.replace("/app");
             return;
           }
-          router.replace("/app");
-          return;
         }
       }
 
