@@ -7,30 +7,59 @@ interface PageProps {
   params: Promise<{ token: string }>;
 }
 
-function toStory(row: Record<string, unknown>): Story {
+interface RpcStory {
+  id: string;
+  user_id: string;
+  title: string;
+  generated_at: string;
+  card_count: number;
+  share_token: string;
+  shared_at: string | null;
+  source_type?: string;
+  note?: string;
+  theme_id?: string;
+  layout_template?: string;
+}
+
+interface RpcCard {
+  id: string;
+  card_type: string;
+  position: number;
+  voi_id: string | null;
+  data: Record<string, unknown>;
+  created_at: string;
+  layout?: string;
+}
+
+interface RpcResponse {
+  story: RpcStory;
+  cards: RpcCard[];
+}
+
+function rpcToStory(s: RpcStory): Story {
   return {
-    id: row.id as string,
-    tripId: row.trip_id as string,
-    userId: row.user_id as string,
-    title: row.title as string,
-    generatedAt: row.generated_at as string,
-    cardCount: row.card_count as number,
-    status: row.status as Story['status'],
-    coverImageUrl: (row.cover_image_url as string) || null,
-    shareToken: (row.share_token as string) || null,
-    sharedAt: (row.shared_at as string) || null,
+    id: s.id,
+    tripId: '', // not returned by RPC; trip data fetched separately if needed
+    userId: s.user_id,
+    title: s.title,
+    generatedAt: s.generated_at,
+    cardCount: s.card_count,
+    status: 'shared', // RPC only returns shared stories
+    coverImageUrl: null, // not returned by RPC
+    shareToken: s.share_token,
+    sharedAt: s.shared_at,
   };
 }
 
-function toStoryCard(row: Record<string, unknown>): StoryCard {
+function rpcToStoryCard(c: RpcCard, storyId: string): StoryCard {
   return {
-    id: row.id as string,
-    storyId: row.story_id as string,
-    cardType: row.card_type as StoryCard['cardType'],
-    position: row.position as number,
-    voiId: (row.voi_id as string) || null,
-    data: row.data as StoryCard['data'],
-    createdAt: row.created_at as string,
+    id: c.id,
+    storyId,
+    cardType: c.card_type as StoryCard['cardType'],
+    position: c.position,
+    voiId: c.voi_id,
+    data: c.data as StoryCard['data'],
+    createdAt: c.created_at,
   };
 }
 
@@ -60,23 +89,15 @@ export async function generateMetadata({ params }: PageProps) {
   if (!/^[A-Z0-9]{4,12}$/i.test(token)) return { title: 'Vidder' };
 
   const supabase = await createClient();
-  const { data: story } = await supabase
-    .from('stories')
-    .select('title, cover_image_url')
-    .eq('share_token', token)
-    .eq('status', 'shared')
-    .single();
+  const { data } = await supabase.rpc('get_shared_story', { p_token: token });
 
-  if (!story) return { title: 'Vidder' };
+  if (!data) return { title: 'Vidder' };
+
+  const { story } = data as RpcResponse;
 
   return {
     title: `${story.title} — Vidder`,
     description: `Se resan "${story.title}" på Vidder`,
-    openGraph: {
-      title: `${story.title} — Vidder`,
-      description: `Se resan "${story.title}" på Vidder`,
-      ...(story.cover_image_url ? { images: [story.cover_image_url] } : {}),
-    },
   };
 }
 
@@ -87,41 +108,42 @@ export default async function StoryPage({ params }: PageProps) {
 
   const supabase = await createClient();
 
-  const { data: storyRow } = await supabase
+  const { data } = await supabase.rpc('get_shared_story', { p_token: token });
+
+  if (!data) notFound();
+
+  const rpc = data as RpcResponse;
+  const story = rpcToStory(rpc.story);
+  const cards = rpc.cards.map((c) => rpcToStoryCard(c, story.id));
+
+  // Trip data is not part of the RPC — fetch separately if story has a trip
+  // The RPC doesn't return trip_id, so we look it up via the story id
+  const { data: storyTripRow } = await supabase
     .from('stories')
-    .select('*')
-    .eq('share_token', token)
-    .eq('status', 'shared')
+    .select('trip_id')
+    .eq('id', story.id)
     .single();
 
-  if (!storyRow) notFound();
+  let trip: Trip | null = null;
+  let tripPoints: TripPoint[] = [];
 
-  const story = toStory(storyRow);
-
-  const [cardsResult, tripResult] = await Promise.all([
-    supabase
-      .from('story_cards')
-      .select('*')
-      .eq('story_id', story.id)
-      .order('position'),
-    supabase
+  if (storyTripRow?.trip_id) {
+    const { data: tripRow } = await supabase
       .from('trips')
       .select('*')
-      .eq('id', story.tripId)
-      .single(),
-  ]);
+      .eq('id', storyTripRow.trip_id)
+      .single();
 
-  const cards = (cardsResult.data || []).map(toStoryCard);
-  const trip = tripResult.data ? toTrip(tripResult.data) : null;
+    trip = tripRow ? toTrip(tripRow) : null;
 
-  let tripPoints: TripPoint[] = [];
-  if (trip) {
-    const { data } = await supabase
-      .from('trip_points')
-      .select('lat, lng, recorded_at')
-      .eq('trip_id', trip.id)
-      .order('recorded_at');
-    tripPoints = (data || []).map(toTripPoint);
+    if (trip) {
+      const { data: points } = await supabase
+        .from('trip_points')
+        .select('lat, lng, recorded_at')
+        .eq('trip_id', trip.id)
+        .order('recorded_at');
+      tripPoints = (points || []).map(toTripPoint);
+    }
   }
 
   return <StoryViewer story={story} cards={cards} trip={trip} tripPoints={tripPoints} />;

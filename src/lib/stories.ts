@@ -8,9 +8,13 @@ interface TripStory {
 
 export async function getUserTripStories(): Promise<TripStory[]> {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("stories")
     .select("trip_id, share_token, title")
+    .eq("user_id", user.id)
     .eq("status", "shared")
     .not("share_token", "is", null);
 
