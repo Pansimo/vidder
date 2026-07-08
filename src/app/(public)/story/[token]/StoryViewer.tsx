@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { Story, StoryCard, Trip, TripPoint } from '@/lib/types';
+import type { Story, StoryCard } from '@/lib/types';
 import StoryProgressBar from './StoryProgressBar';
 import StoryMapTab from './StoryMapTab';
 import IntroCard from './cards/IntroCard';
@@ -14,18 +14,17 @@ import type { PlaceCardData } from '@/lib/types';
 interface StoryViewerProps {
   story: Story;
   cards: StoryCard[];
-  trip: Trip | null;
-  tripPoints: TripPoint[];
+  routePoints: Array<{ lat: number; lng: number }>;
 }
 
-export default function StoryViewer({ story, cards, trip, tripPoints }: StoryViewerProps) {
+export default function StoryViewer({ story, cards, routePoints }: StoryViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [tab, setTab] = useState<'story' | 'map'>('story');
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
 
-  const hasMap = tripPoints.length > 0;
+  const hasMap = routePoints.length > 0;
   const places = cards
     .filter((c) => c.cardType === 'place')
     .map((c) => c.data as PlaceCardData);
@@ -196,7 +195,7 @@ export default function StoryViewer({ story, cards, trip, tripPoints }: StoryVie
 
       {/* Map tab */}
       {tab === 'map' && (
-        <StoryMapTab tripPoints={tripPoints} places={places} />
+        <StoryMapTab routePoints={routePoints} places={places} />
       )}
     </div>
   );

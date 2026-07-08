@@ -2,14 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import type { TripPoint, PlaceCardData } from '@/lib/types';
+import type { PlaceCardData } from '@/lib/types';
 
 interface StoryMapTabProps {
-  tripPoints: TripPoint[];
+  routePoints: Array<{ lat: number; lng: number }>;
   places: PlaceCardData[];
 }
 
-export default function StoryMapTab({ tripPoints, places }: StoryMapTabProps) {
+export default function StoryMapTab({ routePoints, places }: StoryMapTabProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -29,7 +29,7 @@ export default function StoryMapTab({ tripPoints, places }: StoryMapTabProps) {
 
     map.on('load', () => {
       // Route line
-      if (tripPoints.length > 1) {
+      if (routePoints.length > 1) {
         map.addSource('route', {
           type: 'geojson',
           data: {
@@ -37,7 +37,7 @@ export default function StoryMapTab({ tripPoints, places }: StoryMapTabProps) {
             properties: {},
             geometry: {
               type: 'LineString',
-              coordinates: tripPoints.map((p) => [p.lng, p.lat]),
+              coordinates: routePoints.map((p) => [p.lng, p.lat]),
             },
           },
         });
@@ -75,7 +75,7 @@ export default function StoryMapTab({ tripPoints, places }: StoryMapTabProps) {
 
       // Fit bounds
       const allPoints = [
-        ...tripPoints.map((p) => [p.lng, p.lat] as [number, number]),
+        ...routePoints.map((p) => [p.lng, p.lat] as [number, number]),
         ...places.map((p) => [p.lng, p.lat] as [number, number]),
       ];
       if (allPoints.length > 0) {
@@ -89,7 +89,7 @@ export default function StoryMapTab({ tripPoints, places }: StoryMapTabProps) {
       map.remove();
       mapRef.current = null;
     };
-  }, [tripPoints, places]);
+  }, [routePoints, places]);
 
   return <div ref={mapContainer} className="h-full w-full" />;
 }

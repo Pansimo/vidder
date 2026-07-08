@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import type { Story, StoryCard, Trip, TripPoint } from '@/lib/types';
+import type { Story, StoryCard } from '@/lib/types';
 import StoryViewer from './StoryViewer';
 
 interface PageProps {
@@ -63,25 +63,15 @@ function rpcToStoryCard(c: RpcCard, storyId: string): StoryCard {
   };
 }
 
-function toTrip(row: Record<string, unknown>): Trip {
-  return {
-    id: row.id as string,
-    name: row.name as string,
-    startedAt: row.started_at as string,
-    endedAt: (row.ended_at as string) || null,
-    distanceMeters: row.distance_meters as number,
-    isLive: row.is_live as boolean,
-    shareToken: (row.share_token as string) || null,
-    source: (row.source as Trip['source']) || null,
-  };
-}
-
-function toTripPoint(row: Record<string, unknown>): TripPoint {
-  return {
-    lat: row.lat as number,
-    lng: row.lng as number,
-    recordedAt: row.recorded_at as string,
-  };
+/** Extract route points from route-type cards (sorted by position from RPC). */
+function extractRoutePoints(cards: RpcCard[]): Array<{ lat: number; lng: number }> {
+  return cards
+    .filter((c) => c.card_type === 'route')
+    .flatMap((c) => {
+      const pts = c.data?.points;
+      if (!Array.isArray(pts)) return [];
+      return pts.map((p: { lat: number; lng: number }) => ({ lat: p.lat, lng: p.lng }));
+    });
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -115,36 +105,7 @@ export default async function StoryPage({ params }: PageProps) {
   const rpc = data as RpcResponse;
   const story = rpcToStory(rpc.story);
   const cards = rpc.cards.map((c) => rpcToStoryCard(c, story.id));
+  const routePoints = extractRoutePoints(rpc.cards);
 
-  // Trip data is not part of the RPC — fetch separately if story has a trip
-  // The RPC doesn't return trip_id, so we look it up via the story id
-  const { data: storyTripRow } = await supabase
-    .from('stories')
-    .select('trip_id')
-    .eq('id', story.id)
-    .single();
-
-  let trip: Trip | null = null;
-  let tripPoints: TripPoint[] = [];
-
-  if (storyTripRow?.trip_id) {
-    const { data: tripRow } = await supabase
-      .from('trips')
-      .select('*')
-      .eq('id', storyTripRow.trip_id)
-      .single();
-
-    trip = tripRow ? toTrip(tripRow) : null;
-
-    if (trip) {
-      const { data: points } = await supabase
-        .from('trip_points')
-        .select('lat, lng, recorded_at')
-        .eq('trip_id', trip.id)
-        .order('recorded_at');
-      tripPoints = (points || []).map(toTripPoint);
-    }
-  }
-
-  return <StoryViewer story={story} cards={cards} trip={trip} tripPoints={tripPoints} />;
+  return <StoryViewer story={story} cards={cards} routePoints={routePoints} />;
 }
