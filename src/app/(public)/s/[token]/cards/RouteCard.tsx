@@ -26,14 +26,41 @@ function decimatePoints(points: Array<{ lat: number; lng: number }>): Array<{ la
   return result;
 }
 
+/**
+ * Google Encoded Polyline (precision 5) — same algorithm as Flutter's
+ * mapbox_static.dart:_encodePolyline. Mapbox Static API path overlay
+ * requires this format; raw coordinate pairs are not supported.
+ */
+function encodePolyline(points: Array<{ lat: number; lng: number }>): string {
+  let prevLat = 0;
+  let prevLng = 0;
+  let result = '';
+  for (const p of points) {
+    const lat = Math.round(p.lat * 1e5);
+    const lng = Math.round(p.lng * 1e5);
+    result += encodeValue(lat - prevLat);
+    result += encodeValue(lng - prevLng);
+    prevLat = lat;
+    prevLng = lng;
+  }
+  return encodeURIComponent(result);
+}
+
+function encodeValue(value: number): string {
+  let v = value < 0 ? ~(value << 1) : value << 1;
+  let result = '';
+  while (v >= 0x20) {
+    result += String.fromCharCode((0x20 | (v & 0x1f)) + 63);
+    v >>= 5;
+  }
+  result += String.fromCharCode(v + 63);
+  return result;
+}
+
 function buildPathOverlay(points: Array<{ lat: number; lng: number }>): string {
   const decimated = decimatePoints(points);
-  // Mapbox Static API path overlay: lng,lat pairs (longitude first —
-  // confirmed by Flutter's mapbox_static.dart). No encodeURIComponent:
-  // commas must stay literal in the URL path; encoding them to %2C
-  // causes Mapbox to misparse coordinates as encoded polyline → garbage.
-  const coords = decimated.map((p) => `${p.lng.toFixed(5)},${p.lat.toFixed(5)}`).join(',');
-  return `path-4+0009AB-0.7(${coords})`;
+  const encoded = encodePolyline(decimated);
+  return `path-4+0009AB-0.7(${encoded})`;
 }
 
 export default function RouteCard({ data }: RouteCardProps) {
