@@ -28,8 +28,12 @@ function decimatePoints(points: Array<{ lat: number; lng: number }>): Array<{ la
 
 function buildPathOverlay(points: Array<{ lat: number; lng: number }>): string {
   const decimated = decimatePoints(points);
+  // Mapbox Static API path overlay: lng,lat pairs (longitude first —
+  // confirmed by Flutter's mapbox_static.dart). No encodeURIComponent:
+  // commas must stay literal in the URL path; encoding them to %2C
+  // causes Mapbox to misparse coordinates as encoded polyline → garbage.
   const coords = decimated.map((p) => `${p.lng.toFixed(5)},${p.lat.toFixed(5)}`).join(',');
-  return `path-4+0009AB-0.7(${encodeURIComponent(coords)})`;
+  return `path-4+0009AB-0.7(${coords})`;
 }
 
 export default function RouteCard({ data }: RouteCardProps) {
