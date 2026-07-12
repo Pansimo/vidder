@@ -60,7 +60,7 @@ function encodeValue(value: number): string {
 function buildPathOverlay(points: Array<{ lat: number; lng: number }>): string {
   const decimated = decimatePoints(points);
   const encoded = encodePolyline(decimated);
-  return `path-4+0009AB-0.7(${encoded})`;
+  return `path-2+0009AB-0.8(${encoded})`;
 }
 
 export default function RouteCard({ data }: RouteCardProps) {
