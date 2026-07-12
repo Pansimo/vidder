@@ -180,7 +180,7 @@ export default function TripsView() {
                     )}
                     {story && (
                       <a
-                        href={`/story/${story.shareToken}`}
+                        href={`/s/${story.shareToken}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
