@@ -61,7 +61,7 @@ export interface TripPoint {
 // Story types
 
 export type StoryStatus = 'draft' | 'shared';
-export type StoryCardType = 'intro' | 'place' | 'transition' | 'outro' | 'day';
+export type StoryCardType = 'intro' | 'place' | 'transition' | 'outro' | 'day' | 'route' | 'photo' | 'text' | 'sub_header';
 
 export interface Story {
   id: string;
@@ -91,7 +91,11 @@ export type StoryCardData =
   | PlaceCardData
   | TransitionCardData
   | OutroCardData
-  | DayCardData;
+  | DayCardData
+  | RouteCardData
+  | PhotoCardData
+  | TextCardData
+  | SubHeaderCardData;
 
 export interface IntroCardData {
   [key: string]: unknown;
@@ -159,4 +163,32 @@ export interface DayCardData {
   day_number: number;
   date: string;
   weekday: number;
+}
+
+export interface RouteCardData {
+  [key: string]: unknown;
+  points?: Array<{ lat: number; lng: number }>;
+  map_style?: string;
+  map_size?: string;
+  map_padding?: number;
+  title?: string;
+}
+
+export interface PhotoCardData {
+  [key: string]: unknown;
+  thumbnail_url?: string;
+  caption?: string;
+  title?: string;
+}
+
+export interface TextCardData {
+  [key: string]: unknown;
+  text?: string;
+  title?: string;
+}
+
+export interface SubHeaderCardData {
+  [key: string]: unknown;
+  title?: string;
+  text?: string;
 }
