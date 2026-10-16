@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { approveControl, rejectControl } from './actions'
 
 export default async function GranskningPage() {
@@ -7,11 +8,7 @@ export default async function GranskningPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
+  const callerProfile = await getMyProfile(supabase)
 
   if (!callerProfile?.is_admin) {
     return (

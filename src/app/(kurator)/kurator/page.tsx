@@ -1,15 +1,11 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile, listProfilesAdmin } from '@/lib/supabase/profile'
 
 export default async function KuratorDashboard() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user!.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   const isAdmin = profile?.is_admin ?? false
 
@@ -43,12 +39,10 @@ export default async function KuratorDashboard() {
 
     recentAudit = data ?? []
 
-    const { data: curators } = await supabase
-      .from('profiles')
-      .select('id, display_name')
-      .eq('is_curator', true)
+    // v119b: flaggor läses inte direkt ur profiles — admin-listan via RPC.
+    const curators = (await listProfilesAdmin(supabase)).filter((p) => p.is_curator)
 
-    for (const c of curators ?? []) {
+    for (const c of curators) {
       userMap[c.id] = c.display_name ?? c.id.slice(0, 8)
     }
   }

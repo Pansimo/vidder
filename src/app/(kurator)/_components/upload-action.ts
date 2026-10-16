@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const MIME_MAP: Record<string, string> = {
@@ -25,11 +26,7 @@ export async function uploadImage(
     if (!user) return { error: 'Ej inloggad' }
 
     // Verify curator role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_curator')
-      .eq('id', user.id)
-      .single()
+    const profile = await getMyProfile(supabase)
 
     if (!profile?.is_curator) return { error: 'Ej kurator' }
 

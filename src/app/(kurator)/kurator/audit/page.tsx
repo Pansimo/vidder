@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile, listProfilesAdmin } from '@/lib/supabase/profile'
 import { redirect } from 'next/navigation'
 import AuditFilters from './AuditFilters'
 import AuditDiffRow from './AuditDiffRow'
@@ -47,20 +48,15 @@ export default async function AuditPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   if (!profile?.is_admin) redirect('/kurator')
 
   // Fetch curators for filter dropdown
-  const { data: curators } = await supabase
-    .from('profiles')
-    .select('id, display_name')
-    .eq('is_curator', true)
-    .order('display_name')
+  // v119b: flaggor läses inte direkt ur profiles — admin-listan via RPC.
+  const curators = (await listProfilesAdmin(supabase))
+    .filter((p) => p.is_curator)
+    .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? '', 'sv'))
 
   // Build query
   const page = Math.max(1, parseInt(params.page ?? '1'))
@@ -108,7 +104,7 @@ export default async function AuditPage({ searchParams }: Props) {
 
   // Resolve user names
   const userMap: Record<string, string> = {}
-  for (const c of curators ?? []) {
+  for (const c of curators) {
     userMap[c.id] = c.display_name ?? c.id.slice(0, 8)
   }
 
@@ -148,7 +144,7 @@ export default async function AuditPage({ searchParams }: Props) {
     <div className="p-6">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Audit log</h1>
 
-      <AuditFilters curators={curators ?? []} />
+      <AuditFilters curators={curators} />
 
       <p className="mb-3 text-sm text-gray-500">
         {totalCount ?? 0} händelser
