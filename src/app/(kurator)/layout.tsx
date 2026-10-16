@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { redirect } from 'next/navigation'
 import KuratorSidebar from './KuratorSidebar'
 
@@ -7,11 +8,7 @@ export default async function KuratorLayout({ children }: { children: React.Reac
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_curator, is_admin, first_name')
-    .eq('id', user.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   if (!profile?.is_curator) redirect('/app')
 

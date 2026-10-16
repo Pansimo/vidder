@@ -1,16 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import Breadcrumb from '../../../_components/Breadcrumb'
 import OmradeForm from '../OmradeForm'
 
 export default async function NyttOmradePage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user!.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   // Get macro areas for parent select
   const { data: macroAreas } = await supabase

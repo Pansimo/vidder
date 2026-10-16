@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile, listProfilesAdmin } from '@/lib/supabase/profile'
 import { updateUserFlag } from './actions'
 
 export default async function AnvandarePage() {
@@ -7,11 +8,7 @@ export default async function AnvandarePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
+  const callerProfile = await getMyProfile(supabase)
 
   if (!callerProfile?.is_admin) {
     return (
@@ -26,10 +23,10 @@ export default async function AnvandarePage() {
     )
   }
 
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('id, username, first_name, last_name, is_curator, is_premium, is_admin, created_at')
-    .order('created_at', { ascending: false })
+  // v124: alla användares flaggor via list_profiles_admin (SECURITY DEFINER,
+  // bara admin) — efter v119b går de inte att läsa direkt ur profiles.
+  const users = (await listProfilesAdmin(supabase)).sort((a, b) =>
+    (b.created_at ?? '').localeCompare(a.created_at ?? ''))
 
   return (
     <div className="p-6">

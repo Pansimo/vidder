@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { notFound } from 'next/navigation'
 import Breadcrumb from '../../../../../../../_components/Breadcrumb'
 import StatusBadge from '../../../../../../../_components/StatusBadge'
@@ -32,12 +33,7 @@ export default async function RedigeraPoiPage({ params }: Props) {
 
   if (!macro || !sub || !poi) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user!.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   const poiForForm = {
     id: poi.id,

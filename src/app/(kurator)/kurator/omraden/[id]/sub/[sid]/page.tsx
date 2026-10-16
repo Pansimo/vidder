@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Breadcrumb from '../../../../../_components/Breadcrumb'
@@ -29,12 +30,7 @@ export default async function RedigeraSubOmradePage({ params }: Props) {
 
   if (!sub) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user!.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   const { count: poiCount } = await supabase
     .from('curated_pois')

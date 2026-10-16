@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Breadcrumb from '../../../_components/Breadcrumb'
@@ -21,12 +22,7 @@ export default async function RedigeraOmradePage({ params }: Props) {
 
   if (!area) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user!.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   // Count sub-areas
   const { count: subCount } = await supabase

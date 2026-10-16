@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
@@ -8,11 +9,7 @@ async function requireAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('unauthorized')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
+  const profile = await getMyProfile(supabase)
 
   if (!profile?.is_admin) throw new Error('unauthorized')
   return supabase

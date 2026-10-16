@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/profile'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -26,11 +27,7 @@ async function requireCurator():
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Du är inte inloggad' }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_curator, is_admin')
-      .eq('id', user.id)
-      .single()
+    const profile = await getMyProfile(supabase)
 
     if (!profile?.is_curator) return { error: 'Du saknar behörighet för denna åtgärd' }
 
