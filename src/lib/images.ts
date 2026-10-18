@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/client";
+import { signStoragePaths } from "./storage-signing";
 
 const BUCKET = "poi-images";
 
@@ -35,7 +36,7 @@ export async function savePoiImageRecord(
   if (error) throw error;
 }
 
-/** Return public URLs for all images belonging to a POI. */
+/** Return signed URLs for all images belonging to a POI (K2: privat bucket). */
 export async function getPoiImageUrls(poiServerId: string): Promise<string[]> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -46,10 +47,7 @@ export async function getPoiImageUrls(poiServerId: string): Promise<string[]> {
 
   if (error || !data) return [];
 
-  return data.map(({ storage_path }: { storage_path: string }) => {
-    const { data: urlData } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(storage_path);
-    return urlData.publicUrl;
-  });
+  const paths = data.map(({ storage_path }: { storage_path: string }) => storage_path);
+  const urls = await signStoragePaths(supabase, BUCKET, paths);
+  return urls.filter((u): u is string => u !== null);
 }

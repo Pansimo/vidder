@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/client";
+import { signStoragePaths } from "./storage-signing";
 import type { UserPlace, PoiCategory, PoiVisibility, PoiVisitStatus } from "./types";
 
 const BUCKET = "poi-images";
@@ -101,8 +102,8 @@ export async function getUserPlaceImageUrls(userPlaceId: string): Promise<string
 
   if (error || !data) return [];
 
-  return data.map(({ storage_path }: { storage_path: string }) => {
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(storage_path);
-    return urlData.publicUrl;
-  });
+  // K2: poi-images är privat — signerade URL:er, ett anrop.
+  const paths = data.map(({ storage_path }: { storage_path: string }) => storage_path);
+  const urls = await signStoragePaths(supabase, BUCKET, paths);
+  return urls.filter((u): u is string => u !== null);
 }
