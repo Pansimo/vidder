@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { signOutThisDevice } from "@/lib/sign-out";
 
 export type Tab = "map" | "places" | "trips";
 
@@ -15,7 +16,7 @@ export default function BottomNav({ active, onChange }: Props) {
 
   async function handleLogout() {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOutThisDevice(supabase);
     router.push("/login");
     router.refresh();
   }
