@@ -14,5 +14,5 @@ export default async function AppPage() {
     redirect("/login");
   }
 
-  return <AppShell userId={user.id} />;
+  return <AppShell />;
 }

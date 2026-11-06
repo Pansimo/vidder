@@ -198,14 +198,12 @@ function PlacesManagerEditor({
   onSaved,
   onDeleted,
   onShowOnMap,
-  userId,
 }: {
   place: UserPlace;
   onBack: () => void;
   onSaved: (updated: UserPlace) => void;
   onDeleted: (id: string) => void;
   onShowOnMap: (place: UserPlace) => void;
-  userId: string;
 }) {
   const [title, setTitle] = useState(place.title);
   const [category, setCategory] = useState<PoiCategory>(place.category);
@@ -236,8 +234,7 @@ function PlacesManagerEditor({
       await updateUserPlace(
         place.id,
         { note: note || null, visibility, visitStatus, title, category },
-        place.placeId,
-        userId
+        place.placeId
       );
       onSaved({
         ...place,
@@ -418,11 +415,7 @@ function PlacesManagerEditor({
 
 // ---- Main component ----
 
-interface Props {
-  userId: string;
-}
-
-export default function PlacesManager({ userId }: Props) {
+export default function PlacesManager() {
   const [places, setPlaces] = useState<UserPlace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -561,7 +554,6 @@ export default function PlacesManager({ userId }: Props) {
             }}
             onDeleted={handleDeleted}
             onShowOnMap={handleShowOnMap}
-            userId={userId}
           />
         )}
       </div>
