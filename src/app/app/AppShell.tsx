@@ -10,11 +10,7 @@ const MapView = dynamic(() => import("./MapView"), { ssr: false });
 const PlacesManager = dynamic(() => import("./PlacesManager"), { ssr: false });
 const TripsView = dynamic(() => import("./TripsView"), { ssr: false });
 
-interface Props {
-  userId: string;
-}
-
-export default function AppShell({ userId }: Props) {
+export default function AppShell() {
   const [tab, setTab] = useState<Tab>("map");
   const [places, setPlaces] = useState<UserPlace[]>([]);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
@@ -44,7 +40,7 @@ export default function AppShell({ userId }: Props) {
           />
         )}
         {tab === "places" && (
-          <PlacesManager userId={userId} />
+          <PlacesManager />
         )}
         {tab === "trips" && (
           <TripsView />

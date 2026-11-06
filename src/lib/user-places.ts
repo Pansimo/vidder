@@ -43,8 +43,7 @@ export async function updateUserPlace(
     title?: string;
     category?: PoiCategory;
   },
-  placeId: string | null,
-  userId: string
+  placeId: string | null
 ): Promise<void> {
   const supabase = createClient();
 
@@ -74,11 +73,13 @@ export async function updateUserPlace(
     if (fields.category !== undefined) placeUpdate.category = fields.category;
 
     if (Object.keys(placeUpdate).length > 0) {
+      // v131 (G8ab2): places.created_by är inte läsbar för klienter — ett
+      // .eq("created_by", …) i WHERE gav 42501. Ägarkontrollen är RLS
+      // ("Creator can update own place"): en annan användares rad ger 0 rader.
       await supabase
         .from("places")
         .update(placeUpdate)
-        .eq("id", placeId)
-        .eq("created_by", userId);
+        .eq("id", placeId);
     }
   }
 }
